@@ -1,0 +1,14 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Local backups exported from the app
+*-backup.json
+hseq-report.csv
+
+# Logs / temp
+*.log
+node_modules/
