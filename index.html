@@ -19,12 +19,13 @@
         </div>
       </div>
       <nav class="nav" id="nav">
-        <button class="nav-btn active" data-view="dashboard"><span>📊</span> Dashboard</button>
-        <button class="nav-btn" data-view="new"><span>➕</span> New Report</button>
-        <button class="nav-btn" data-view="cases"><span>🗂️</span> Cases</button>
-        <button class="nav-btn" data-view="risk"><span>⚠️</span> Risk Matrix</button>
-        <button class="nav-btn" data-view="reports"><span>📈</span> Reports</button>
-        <button class="nav-btn" data-view="data"><span>💾</span> Data</button>
+        <button type="button" class="nav-btn active" data-view="dashboard"><span>📊</span> Dashboard</button>
+        <button type="button" class="nav-btn" data-view="new"><span>➕</span> Raise Report</button>
+        <button type="button" class="nav-btn" data-view="cases"><span>🗂️</span> Cases</button>
+        <button type="button" class="nav-btn" data-view="risk"><span>⚠️</span> Risk Matrix</button>
+        <button type="button" class="nav-btn" data-view="audits"><span>✅</span> Audits</button>
+        <button type="button" class="nav-btn" data-view="reports"><span>📈</span> Reports</button>
+        <button type="button" class="nav-btn" data-view="data"><span>💾</span> Data</button>
       </nav>
       <div class="sidebar-foot">
         <div class="safety-board">
@@ -71,8 +72,8 @@
             <div class="chart-wrap"><canvas id="chartPareto"></canvas></div>
           </div>
           <div class="card">
-            <h3>Estimated cost by month</h3>
-            <div class="chart-wrap"><canvas id="chartCost"></canvas></div>
+            <h3>Reports by severity</h3>
+            <div class="chart-wrap"><canvas id="chartSeverity"></canvas></div>
           </div>
           <div class="card">
             <h3>Safety pyramid (Heinrich)</h3>
@@ -81,11 +82,11 @@
         </div>
       </section>
 
-      <!-- ---------- New Report ---------- -->
+      <!-- ---------- Raise Report (step 1) ---------- -->
       <section class="view" id="view-new">
         <header class="view-head">
-          <h1 id="formTitle">New Report</h1>
-          <p class="muted">File a non-conformance, accident, near miss, observation, improvement or prevention.</p>
+          <h1 id="formTitle">Raise a Report</h1>
+          <p class="muted">Quick capture for the floor — just the basics. The HSEQ team adds risk, cause and corrective actions later as the case is processed.</p>
         </header>
         <form id="reportForm" class="form card">
           <input type="hidden" id="f-id" />
@@ -96,11 +97,24 @@
             <label>Category *
               <select id="f-category" required></select>
             </label>
-            <label class="span2">Title *
+            <label class="span2">What happened? (title) *
               <input type="text" id="f-title" maxlength="120" required placeholder="Short summary" />
             </label>
             <label class="span2">Description
-              <textarea id="f-description" rows="3" placeholder="What happened?"></textarea>
+              <textarea id="f-description" rows="3" placeholder="A bit more detail…"></textarea>
+            </label>
+            <label>Customer
+              <input type="text" id="f-customer" list="customers" placeholder="Customer / account (optional)" />
+              <datalist id="customers"></datalist>
+            </label>
+            <label>How bad was it? *
+              <select id="f-severity" required>
+                <option value="1">1 — Insignificant</option>
+                <option value="2">2 — Minor</option>
+                <option value="3" selected>3 — Moderate</option>
+                <option value="4">4 — Major</option>
+                <option value="5">5 — Severe</option>
+              </select>
             </label>
             <label>Location *
               <input type="text" id="f-location" list="locations" required />
@@ -116,44 +130,21 @@
               <input type="text" id="f-reporter" list="people" required />
               <datalist id="people"></datalist>
             </label>
-            <label>Likelihood (1–5) *
-              <select id="f-likelihood" required>
-                <option value="1">1 — Rare</option><option value="2">2 — Unlikely</option>
-                <option value="3" selected>3 — Possible</option><option value="4">4 — Likely</option>
-                <option value="5">5 — Almost certain</option>
-              </select>
-            </label>
-            <label>Consequence (1–5) *
-              <select id="f-consequence" required>
-                <option value="1">1 — Insignificant</option><option value="2">2 — Minor</option>
-                <option value="3" selected>3 — Moderate</option><option value="4">4 — Major</option>
-                <option value="5">5 — Severe</option>
-              </select>
-            </label>
-            <label>Calculated risk
-              <input type="text" id="f-riskOut" readonly />
-            </label>
-            <label>Root cause
-              <select id="f-rootCause"></select>
-            </label>
             <label>Assigned to
               <input type="text" id="f-assignedTo" list="people" />
             </label>
-            <label>Status
-              <select id="f-status"></select>
+            <label>Email a copy to (reporter)
+              <input type="email" id="f-notifyEmail" placeholder="name@company.com" />
+              <small class="hint">📭 Email sending isn’t live yet — this just records where the copy will go when it is.</small>
             </label>
-            <label>Estimated cost (A$)
-              <input type="number" id="f-cost" min="0" step="50" value="0" />
-            </label>
-            <label class="span2">Immediate action taken
-              <textarea id="f-immediateAction" rows="2"></textarea>
-            </label>
-            <label class="span2">Corrective action
-              <textarea id="f-correctiveAction" rows="2"></textarea>
+            <label class="span2">Attachments (photos / files)
+              <input type="file" id="f-attachments" multiple accept="image/*,application/pdf" />
+              <small class="hint">Stored in your browser only (no server). Keep files small — under ~2&nbsp;MB each.</small>
+              <div class="attach-list" id="attachList"></div>
             </label>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn primary">Save report</button>
+            <button type="submit" class="btn primary">Submit report</button>
             <button type="button" class="btn" id="formReset">Clear</button>
           </div>
         </form>
@@ -163,26 +154,27 @@
       <section class="view" id="view-cases">
         <header class="view-head">
           <h1>Cases</h1>
-          <p class="muted">Search, filter and process every report.</p>
+          <p class="muted">Search, filter, process and export every report.</p>
         </header>
         <div class="filters card">
-          <input type="search" id="flt-search" placeholder="Search title / ref / reporter…" />
-          <select id="flt-type"><option value="">All types</option></select>
-          <select id="flt-status"><option value="">All statuses</option></select>
-          <select id="flt-location"><option value="">All locations</option></select>
-          <select id="flt-risk">
+          <input type="search" id="flt-search" placeholder="Search title / ref / reporter / customer…" aria-label="Search cases" />
+          <select id="flt-type" aria-label="Filter by type"><option value="">All types</option></select>
+          <select id="flt-status" aria-label="Filter by status"><option value="">All statuses</option></select>
+          <select id="flt-location" aria-label="Filter by location"><option value="">All locations</option></select>
+          <select id="flt-risk" aria-label="Filter by risk band">
             <option value="">All risk</option>
             <option>Extreme</option><option>High</option><option>Medium</option><option>Low</option>
+            <option>Untriaged</option>
           </select>
-          <button class="btn" id="flt-clear">Reset</button>
+          <button type="button" class="btn" id="flt-clear">Reset</button>
         </div>
         <div class="table-meta"><span id="casesCount"></span></div>
         <div class="table-wrap">
           <table class="data-table" id="casesTable">
             <thead>
               <tr>
-                <th>Ref</th><th>Type</th><th>Title</th><th>Location</th>
-                <th>Reported</th><th>Risk</th><th>Status</th><th>Cost</th><th></th>
+                <th>Ref</th><th>Type</th><th>Title</th><th>Customer</th><th>Location</th>
+                <th>Reported</th><th>Risk</th><th>Status</th><th><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -194,7 +186,7 @@
       <section class="view" id="view-risk">
         <header class="view-head">
           <h1>Risk Matrix</h1>
-          <p class="muted">Open reports plotted by likelihood × consequence. Click a cell to view those cases.</p>
+          <p class="muted">Triaged open reports plotted by likelihood × consequence. Click a cell to view those cases.</p>
         </header>
         <div class="card">
           <div class="matrix" id="riskMatrix"></div>
@@ -203,24 +195,35 @@
             <span class="risk-medium">Medium (5–9)</span>
             <span class="risk-high">High (10–14)</span>
             <span class="risk-extreme">Extreme (15–25)</span>
+            <span class="muted" id="untriagedNote"></span>
           </div>
         </div>
+      </section>
+
+      <!-- ---------- Audits ---------- -->
+      <section class="view" id="view-audits">
+        <header class="view-head">
+          <h1>Audits</h1>
+          <p class="muted">Build your own audit / inspection checklists, run them, and keep a record. Add as many custom audit types as you need.</p>
+        </header>
+        <div id="auditsRoot"></div>
       </section>
 
       <!-- ---------- Reports (builder/export) ---------- -->
       <section class="view" id="view-reports">
         <header class="view-head no-print">
           <h1>Report Builder</h1>
-          <p class="muted">Generate a filtered summary for a date range, then print to PDF or export CSV.</p>
+          <p class="muted">Generate a filtered summary, then print to PDF or export CSV.</p>
         </header>
         <div class="filters card no-print">
           <label class="inline">From <input type="date" id="rep-from" /></label>
           <label class="inline">To <input type="date" id="rep-to" /></label>
-          <select id="rep-type"><option value="">All types</option></select>
-          <select id="rep-location"><option value="">All locations</option></select>
-          <button class="btn primary" id="rep-run">Generate</button>
-          <button class="btn" id="rep-csv">Export CSV</button>
-          <button class="btn" id="rep-print">Print / PDF</button>
+          <select id="rep-type" aria-label="Filter report by type"><option value="">All types</option></select>
+          <select id="rep-status" aria-label="Filter report by status"><option value="">All statuses</option></select>
+          <select id="rep-location" aria-label="Filter report by location"><option value="">All locations</option></select>
+          <button type="button" class="btn primary" id="rep-run">Generate</button>
+          <button type="button" class="btn" id="rep-csv">Export CSV</button>
+          <button type="button" class="btn" id="rep-print">Print / PDF</button>
         </div>
         <div id="reportOutput"></div>
       </section>
@@ -233,15 +236,15 @@
         </header>
         <div class="card">
           <h3>Demo data</h3>
-          <p class="muted">Load sample reports to explore the dashboards, or start empty.</p>
-          <button class="btn primary" id="data-seed">Load demo data (42 reports)</button>
-          <button class="btn danger" id="data-clear">Clear all data</button>
+          <p class="muted">The sample reports are randomly generated placeholders — not real. Clear them before live use.</p>
+          <button type="button" class="btn primary" id="data-seed">Load demo data (42 reports)</button>
+          <button type="button" class="btn danger" id="data-clear">Clear all reports</button>
         </div>
         <div class="card">
           <h3>Backup / restore</h3>
           <p class="muted">Export a JSON backup, or import one (this is your “save file”).</p>
-          <button class="btn" id="data-export">Export JSON</button>
-          <button class="btn" id="data-import">Import JSON…</button>
+          <button type="button" class="btn" id="data-export">Export JSON</button>
+          <button type="button" class="btn" id="data-import">Import JSON…</button>
           <input type="file" id="importFile" accept="application/json" hidden />
         </div>
       </section>
@@ -256,10 +259,14 @@
     </div>
   </div>
 
+  <!-- print target for single-record / audit PDFs -->
+  <div id="printRoot"></div>
+
   <div class="toast" id="toast" hidden></div>
 
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/charts.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/audits.js"></script>
 </body>
 </html>

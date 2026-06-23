@@ -211,10 +211,57 @@ h3 { font-size: .95rem; margin: 0 0 12px; color: var(--text); }
   .brand-name, .brand-sub, .nav-btn span + *, .safety-lbl, .safety-num { font-size: 0; }
 }
 
+/* --------------------------------- Hints --------------------------------- */
+.hint { font-weight: 400; color: var(--muted); font-size: .72rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.risk-untriaged { background: #e2e8f0; color: #475569; }
+
+/* ------------------------------ Attachments ------------------------------ */
+.attach-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.attach-chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: .76rem; display: inline-flex; align-items: center; gap: 6px; }
+.attach-x { border: 0; background: #e2e8f0; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; line-height: 1; }
+.attach-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.attach-item { display: flex; flex-direction: column; align-items: center; width: 84px; text-decoration: none; color: var(--text); font-size: .68rem; word-break: break-word; text-align: center; }
+.attach-item img { width: 84px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+.attach-item .file-ico { font-size: 2.4rem; }
+
+/* ------------------------------ Stage box -------------------------------- */
+.stage-box { background: var(--surface-2); border: 1px dashed var(--border); border-radius: 10px; padding: 16px; margin-top: 16px; }
+.stage-box h3 { margin-top: 0; }
+.stage-box .form-grid { margin-bottom: 12px; }
+.ref-list { padding-left: 18px; } .ref-list li { margin: 4px 0; }
+
+/* -------------------------------- Audits --------------------------------- */
+.audit-head { display: flex; justify-content: space-between; align-items: center; }
+.audit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.audit-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; justify-content: space-between; }
+.audit-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.bld-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.bld-num { width: 22px; text-align: center; color: var(--muted); font-weight: 700; }
+.bld-text { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+.bld-req { font-size: .74rem; color: var(--muted); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.run-items { margin: 8px 0; }
+.run-row { border-bottom: 1px solid var(--border); padding: 12px 0; }
+.run-q { font-weight: 600; margin-bottom: 8px; }
+.run-opts { display: flex; gap: 14px; margin-bottom: 8px; }
+.run-opt { font-size: .85rem; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.run-comment { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+
+/* ------------------------------ Print docs ------------------------------- */
+#printRoot { display: none; }
+.print-report h1 { font-size: 1.4rem; }
+.print-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 6px 9px; text-align: left; font-size: .85rem; vertical-align: top; }
+.print-table th { background: #f1f5f9; width: 180px; }
+.print-foot { color: #94a3b8; font-size: .72rem; margin-top: 18px; }
+
 /* --------------------------------- Print --------------------------------- */
 @media print {
   .sidebar, .no-print, .nav, .filters.no-print { display: none !important; }
   .main { padding: 0; max-width: none; }
   body { background: #fff; }
   .report-doc { border: 0; box-shadow: none; }
+  /* single-record / audit PDF: show only the print root */
+  body.print-single .layout { display: none !important; }
+  body.print-single #printRoot { display: block !important; }
 }

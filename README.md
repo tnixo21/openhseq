@@ -12,19 +12,33 @@ site you can open by double-clicking `index.html`. All data lives in your browse
 
 ## ✨ Features
 
-### Reporting (the Mellora-style core)
-- **Six Quick-Report types**: Non-Conformance, Accident, Near Miss, Observation, Improvement, Prevention — each with an auto-generated reference number (e.g. `NCR-2026-007`).
-- **Case management**: every report becomes a case you can search, filter, edit, re-assign and move through `Open → In Progress → Closed`.
-- **Risk scoring**: 5×5 likelihood × consequence with automatic Low/Medium/High/Extreme banding.
-- **HSEQ categorisation**: Health / Safety / Environment / Quality, root-cause, immediate & corrective actions, cost.
+### Staged reporting workflow (built for the floor)
+Reporting is deliberately split so warehouse staff only fill the basics, and the HSEQ
+team adds the technical detail later:
 
-### Analytics & reporting (the value-add layer)
-- **KPI dashboard**: totals, open/closed, high-risk-open, **near-miss : accident ratio** (leading indicator), **average days-to-close**, estimated cost.
-- **Charts** (Chart.js): reports by type, 12-month trend, status split, H/S/E/Q split, top locations, **root-cause Pareto** (with cumulative %), and **cost by month**.
-- **Risk matrix**: interactive 5×5 heatmap of *open* reports — click a cell to list those cases.
-- **Safety pyramid** (Heinrich triangle): accidents → non-conformances → near-misses → proactive.
-- **"Days since last recordable incident"** safety board.
-- **Report Builder**: filter by date range / type / location → on-screen summary → **print to PDF** or **export CSV**.
+| Stage | Who | Adds |
+|---|---|---|
+| **Raise (Open)** | Floor / warehouse | Type, category, title, description, **customer**, **how bad it was (severity)**, location, date, reporter, **attachments**, **email-a-copy** (placeholder) |
+| **Triage → In Progress** | HSEQ | Likelihood, root cause, immediate action (this is when the risk score is calculated) |
+| **Close** | HSEQ | Corrective action |
+
+- **Six report types**: Non-Conformance, Accident, Near Miss, Observation, Improvement, Prevention — auto reference numbers (e.g. `NCR-2026-007`).
+- **Attachments**: photos / PDFs attached at raise time, stored in-browser, preview + download from the case.
+- **Customer** field, and an **email-to** field (wired as a placeholder — no sending yet).
+- **Risk scoring**: 5×5 likelihood × consequence, auto Low/Medium/High/Extreme; un-triaged cases are flagged rather than scored.
+- **Single-case PDF**: download/print any one report from its detail view.
+
+### Audits (custom builder)
+- **Build your own audit/inspection types** — title, category, and a checklist of questions (optionally comment-required).
+- **Run** an audit (Pass/Fail/N·A + comments) → auto **pass-rate %** → saved to a record.
+- **Completed audits** log with view / PDF / delete. Ships with 3 sample templates.
+
+### Analytics & reporting
+- **KPI dashboard**: totals, open / in-progress / closed, **awaiting-triage**, high-risk-open, **near-miss : accident ratio**, **average days-to-close**.
+- **Charts** (Chart.js): by type, 12-month trend, status, H/S/E/Q, top locations, **root-cause Pareto**, **reports by severity**.
+- **Risk matrix**: interactive 5×5 heatmap of triaged open reports — click a cell to drill in.
+- **Safety pyramid** (Heinrich) and a **"days since last recordable incident"** board.
+- **Report Builder**: filter by date range / type / **status** / location → summary → **print to PDF** or **export CSV**.
 - **Backup/restore**: export & import all data as JSON.
 
 ---
@@ -73,9 +87,10 @@ These were intentionally deferred (you asked to skip API/integration for now):
 
 - REST/JSON API + multi-user backend (e.g. Node + SQLite/Postgres) to replace localStorage.
 - Authentication & roles (reporter / processor / admin).
-- Photo & file attachments, digital signatures.
-- Email notifications and scheduled/automatic workflows (HSEQ Planner).
-- Document Centre, checklists/audits and timesheets modules.
+- **Email sending** — the "email a copy to reporter" field is captured but not yet wired to a mail service.
+- Digital signatures; larger attachment storage (localStorage is browser-limited).
+- Scheduled/automatic workflows and reminders (HSEQ Planner).
+- Document Centre and timesheets modules.
 - Power BI / CSV API export endpoints.
 
 ---
