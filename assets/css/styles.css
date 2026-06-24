@@ -255,13 +255,72 @@ h3 { font-size: .95rem; margin: 0 0 12px; color: var(--text); }
 .print-table th { background: #f1f5f9; width: 180px; }
 .print-foot { color: #94a3b8; font-size: .72rem; margin-top: 18px; }
 
+/* ------------------------------ Branding --------------------------------- */
+.brand-logo { width: 40px; height: 40px; object-fit: contain; border-radius: 8px; background: #fff; }
+.logo-preview { margin-top: 10px; display: flex; align-items: center; gap: 12px; }
+.logo-preview img { height: 48px; border: 1px solid var(--border); border-radius: 8px; padding: 4px; background: #fff; }
+
+/* -------------------------------- Overdue -------------------------------- */
+.badge-overdue { background: #fee2e2; color: #b91c1c; }
+.overdue-text { color: var(--danger); font-weight: 700; }
+.data-table tr.overdue td { background: #fef2f2; }
+.mini { font-size: .7rem; color: var(--ok); font-weight: 700; }
+
+/* --------------------------- Filters extras ------------------------------ */
+.filter-sep { flex: 1; }
+.bulk-bar { display: flex; align-items: center; gap: 8px; background: var(--bg); color: #fff; padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; }
+.bulk-bar #bulkCount { font-weight: 700; margin-right: auto; }
+
+/* ----------------------------- CAPA / actions ---------------------------- */
+.capa-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 16px; }
+.capa-box h3 { margin-top: 0; }
+.capa-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.capa-row.overdue { background: #fef2f2; border-radius: 6px; padding-left: 8px; }
+.capa-main { flex: 1; }
+.capa-actions { display: flex; gap: 6px; align-items: center; }
+.capa-status { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font: inherit; }
+.capa-add { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.capa-add input { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+.capa-add #capa-desc { flex: 1; min-width: 160px; }
+
+/* --------------------------- History / sign-off -------------------------- */
+.history { margin-top: 14px; }
+.history summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+.history ul { margin: 8px 0 0; padding-left: 18px; font-size: .82rem; }
+.history li { margin: 3px 0; }
+.sig-wrap { margin: 10px 0; }
+.sig-pad { border: 1px dashed var(--border); border-radius: 8px; background: #fff; touch-action: none; display: block; margin: 6px 0; }
+.sig-img { height: 60px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+
+/* --------------------------- Settings editor ----------------------------- */
+.set-list, #set-types { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.set-item, .type-row { display: flex; gap: 8px; align-items: center; }
+.set-item input, .type-row input[type="text"] { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }
+.set-item input { flex: 1; }
+.type-row .t-id { flex: 1; }
+.type-row .t-prefix { width: 80px; }
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.qr-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+.qr-card img { width: 120px; height: 120px; }
+.qr-name { font-size: .78rem; font-weight: 600; margin: 6px 0; }
+
+/* ------------------------------- Audits ---------------------------------- */
+.audit-card.is-due { border-color: var(--danger); box-shadow: 0 0 0 2px #fee2e2; }
+
+/* ------------------------------ Print docs ------------------------------- */
+#printRoot { display: none; }
+.print-report h1 { font-size: 1.4rem; }
+.print-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 6px 9px; text-align: left; font-size: .85rem; vertical-align: top; }
+.print-table th { background: #f1f5f9; }
+.print-foot { color: #94a3b8; font-size: .72rem; margin-top: 18px; }
+
 /* --------------------------------- Print --------------------------------- */
 @media print {
   .sidebar, .no-print, .nav, .filters.no-print { display: none !important; }
   .main { padding: 0; max-width: none; }
   body { background: #fff; }
   .report-doc { border: 0; box-shadow: none; }
-  /* single-record / audit PDF: show only the print root */
   body.print-single .layout { display: none !important; }
   body.print-single #printRoot { display: block !important; }
 }

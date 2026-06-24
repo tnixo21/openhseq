@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OpenHSEQ — Reporting & Analytics</title>
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon.svg" />
+  <link rel="apple-touch-icon" href="assets/icon.svg" />
   <link rel="stylesheet" href="assets/css/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
@@ -12,25 +16,28 @@
     <!-- ===================== Sidebar ===================== -->
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand-mark">◆</span>
+        <span class="brand-mark" id="brandMark">◆</span>
+        <img class="brand-logo" id="brandLogo" alt="logo" hidden />
         <div>
-          <div class="brand-name">OpenHSEQ</div>
-          <div class="brand-sub">Reports &amp; Analytics</div>
+          <div class="brand-name" id="brandName">OpenHSEQ</div>
+          <div class="brand-sub" data-i18n="app.tagline">Reports &amp; Analytics</div>
         </div>
       </div>
       <nav class="nav" id="nav">
-        <button type="button" class="nav-btn active" data-view="dashboard"><span>📊</span> Dashboard</button>
-        <button type="button" class="nav-btn" data-view="new"><span>➕</span> Raise Report</button>
-        <button type="button" class="nav-btn" data-view="cases"><span>🗂️</span> Cases</button>
-        <button type="button" class="nav-btn" data-view="risk"><span>⚠️</span> Risk Matrix</button>
-        <button type="button" class="nav-btn" data-view="audits"><span>✅</span> Audits</button>
-        <button type="button" class="nav-btn" data-view="reports"><span>📈</span> Reports</button>
-        <button type="button" class="nav-btn" data-view="data"><span>💾</span> Data</button>
+        <button type="button" class="nav-btn active" data-view="dashboard"><span>📊</span> <span data-i18n="nav.dashboard">Dashboard</span></button>
+        <button type="button" class="nav-btn" data-view="new"><span>➕</span> <span data-i18n="nav.new">Raise Report</span></button>
+        <button type="button" class="nav-btn" data-view="cases"><span>🗂️</span> <span data-i18n="nav.cases">Cases</span></button>
+        <button type="button" class="nav-btn" data-view="actions"><span>✔️</span> <span data-i18n="nav.actions">Actions</span></button>
+        <button type="button" class="nav-btn" data-view="risk"><span>⚠️</span> <span data-i18n="nav.risk">Risk Matrix</span></button>
+        <button type="button" class="nav-btn" data-view="audits"><span>✅</span> <span data-i18n="nav.audits">Audits</span></button>
+        <button type="button" class="nav-btn" data-view="documents"><span>📁</span> <span data-i18n="nav.documents">Documents</span></button>
+        <button type="button" class="nav-btn" data-view="reports"><span>📈</span> <span data-i18n="nav.reports">Reports</span></button>
+        <button type="button" class="nav-btn" data-view="settings"><span>⚙️</span> <span data-i18n="nav.settings">Settings</span></button>
       </nav>
       <div class="sidebar-foot">
         <div class="safety-board">
           <div class="safety-num" id="daysSinceIncident">—</div>
-          <div class="safety-lbl">days since last<br>recordable incident</div>
+          <div class="safety-lbl" data-i18n="safety.days">days since last recordable incident</div>
         </div>
       </div>
     </aside>
@@ -40,122 +47,71 @@
       <!-- ---------- Dashboard ---------- -->
       <section class="view active" id="view-dashboard">
         <header class="view-head">
-          <h1>Dashboard</h1>
-          <p class="muted">Live overview of all HSEQ reports.</p>
+          <h1 data-i18n="dash.title">Dashboard</h1>
+          <p class="muted" data-i18n="dash.sub">Live overview of all HSEQ reports.</p>
         </header>
-
         <div class="kpi-grid" id="kpiGrid"></div>
-
         <div class="card-grid">
-          <div class="card">
-            <h3>Reports by type</h3>
-            <div class="chart-wrap"><canvas id="chartType"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>Monthly trend (12 mo)</h3>
-            <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>Status breakdown</h3>
-            <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>By H/S/E/Q category</h3>
-            <div class="chart-wrap"><canvas id="chartCategory"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>Top locations</h3>
-            <div class="chart-wrap"><canvas id="chartLocation"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>Root-cause Pareto</h3>
-            <div class="chart-wrap"><canvas id="chartPareto"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>Reports by severity</h3>
-            <div class="chart-wrap"><canvas id="chartSeverity"></canvas></div>
-          </div>
-          <div class="card">
-            <h3>Safety pyramid (Heinrich)</h3>
-            <div class="pyramid" id="pyramid"></div>
-          </div>
+          <div class="card"><h3>Reports by type</h3><div class="chart-wrap"><canvas id="chartType"></canvas></div></div>
+          <div class="card"><h3>Monthly trend (12 mo)</h3><div class="chart-wrap"><canvas id="chartTrend"></canvas></div></div>
+          <div class="card"><h3>Status breakdown</h3><div class="chart-wrap"><canvas id="chartStatus"></canvas></div></div>
+          <div class="card"><h3>By H/S/E/Q category</h3><div class="chart-wrap"><canvas id="chartCategory"></canvas></div></div>
+          <div class="card"><h3>Top locations</h3><div class="chart-wrap"><canvas id="chartLocation"></canvas></div></div>
+          <div class="card"><h3>Root-cause Pareto</h3><div class="chart-wrap"><canvas id="chartPareto"></canvas></div></div>
+          <div class="card"><h3>Reports by severity</h3><div class="chart-wrap"><canvas id="chartSeverity"></canvas></div></div>
+          <div class="card"><h3>Safety pyramid (Heinrich)</h3><div class="pyramid" id="pyramid"></div></div>
         </div>
       </section>
 
-      <!-- ---------- Raise Report (step 1) ---------- -->
+      <!-- ---------- Raise Report ---------- -->
       <section class="view" id="view-new">
         <header class="view-head">
-          <h1 id="formTitle">Raise a Report</h1>
+          <h1 id="formTitle" data-i18n="new.title">Raise a Report</h1>
           <p class="muted">Quick capture for the floor — just the basics. The HSEQ team adds risk, cause and corrective actions later as the case is processed.</p>
         </header>
         <form id="reportForm" class="form card">
           <input type="hidden" id="f-id" />
           <div class="form-grid">
-            <label>Report type *
-              <select id="f-type" required></select>
-            </label>
-            <label>Category *
-              <select id="f-category" required></select>
-            </label>
-            <label class="span2">What happened? (title) *
-              <input type="text" id="f-title" maxlength="120" required placeholder="Short summary" />
-            </label>
-            <label class="span2">Description
-              <textarea id="f-description" rows="3" placeholder="A bit more detail…"></textarea>
-            </label>
-            <label>Customer
-              <input type="text" id="f-customer" list="customers" placeholder="Customer / account (optional)" />
-              <datalist id="customers"></datalist>
-            </label>
+            <label>Report type *<select id="f-type" required></select></label>
+            <label>Category *<select id="f-category" required></select></label>
+            <label class="span2">What happened? (title) *<input type="text" id="f-title" maxlength="120" required placeholder="Short summary" /></label>
+            <label class="span2">Description<textarea id="f-description" rows="3" placeholder="A bit more detail…"></textarea></label>
+            <label>Customer<input type="text" id="f-customer" list="customers" placeholder="Customer / account (optional)" /><datalist id="customers"></datalist></label>
             <label>How bad was it? *
               <select id="f-severity" required>
-                <option value="1">1 — Insignificant</option>
-                <option value="2">2 — Minor</option>
-                <option value="3" selected>3 — Moderate</option>
-                <option value="4">4 — Major</option>
+                <option value="1">1 — Insignificant</option><option value="2">2 — Minor</option>
+                <option value="3" selected>3 — Moderate</option><option value="4">4 — Major</option>
                 <option value="5">5 — Severe</option>
               </select>
             </label>
-            <label>Location *
-              <input type="text" id="f-location" list="locations" required />
-              <datalist id="locations"></datalist>
-            </label>
-            <label>Department
-              <input type="text" id="f-department" />
-            </label>
-            <label>Date occurred *
-              <input type="date" id="f-dateOccurred" required />
-            </label>
-            <label>Reported by *
-              <input type="text" id="f-reporter" list="people" required />
-              <datalist id="people"></datalist>
-            </label>
-            <label>Assigned to
-              <input type="text" id="f-assignedTo" list="people" />
-            </label>
+            <label>Location *<input type="text" id="f-location" list="locations" required /><datalist id="locations"></datalist></label>
+            <label>Department<input type="text" id="f-department" /></label>
+            <label>Date occurred *<input type="date" id="f-dateOccurred" required /></label>
+            <label>Reported by *<input type="text" id="f-reporter" list="people" required /><datalist id="people"></datalist></label>
+            <label>Assigned to<input type="text" id="f-assignedTo" list="people" /></label>
             <label>Email a copy to (reporter)
               <input type="email" id="f-notifyEmail" placeholder="name@company.com" />
               <small class="hint">📭 Email sending isn’t live yet — this just records where the copy will go when it is.</small>
             </label>
             <label class="span2">Attachments (photos / files)
               <input type="file" id="f-attachments" multiple accept="image/*,application/pdf" />
-              <small class="hint">Stored in your browser only (no server). Keep files small — under ~2&nbsp;MB each.</small>
-              <div class="attach-list" id="attachList"></div>
+              <small class="hint">Stored in your browser only (no server). Keep files under ~2&nbsp;MB each.</small>
             </label>
+            <label class="span2">📷 Take a photo (mobile)
+              <input type="file" id="f-camera" accept="image/*" capture="environment" />
+            </label>
+            <div class="span2 attach-list" id="attachList"></div>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn primary">Submit report</button>
-            <button type="button" class="btn" id="formReset">Clear</button>
+            <button type="submit" class="btn primary" data-i18n="btn.submit">Submit report</button>
+            <button type="button" class="btn" id="formReset" data-i18n="btn.clear">Clear</button>
           </div>
         </form>
       </section>
 
       <!-- ---------- Cases ---------- -->
       <section class="view" id="view-cases">
-        <header class="view-head">
-          <h1>Cases</h1>
-          <p class="muted">Search, filter, process and export every report.</p>
-        </header>
+        <header class="view-head"><h1 data-i18n="cases.title">Cases</h1><p class="muted">Search, filter, process and export every report.</p></header>
         <div class="filters card">
           <input type="search" id="flt-search" placeholder="Search title / ref / reporter / customer…" aria-label="Search cases" />
           <select id="flt-type" aria-label="Filter by type"><option value="">All types</option></select>
@@ -164,19 +120,46 @@
           <select id="flt-risk" aria-label="Filter by risk band">
             <option value="">All risk</option>
             <option>Extreme</option><option>High</option><option>Medium</option><option>Low</option>
-            <option>Untriaged</option>
+            <option>Untriaged</option><option>Overdue</option>
           </select>
           <button type="button" class="btn" id="flt-clear">Reset</button>
+          <span class="filter-sep"></span>
+          <select id="savedFilters" aria-label="Saved filters"><option value="">Saved filters…</option></select>
+          <button type="button" class="btn" id="saveFilter">Save</button>
+          <button type="button" class="btn" id="delFilter">Del</button>
+        </div>
+        <div class="bulk-bar" id="bulkBar" hidden>
+          <span id="bulkCount">0 selected</span>
+          <button type="button" class="btn small" id="bulk-progress">→ In Progress</button>
+          <button type="button" class="btn small" id="bulk-close">→ Closed</button>
+          <button type="button" class="btn small" id="bulk-csv">Export CSV</button>
+          <button type="button" class="btn small danger" id="bulk-delete">Delete</button>
         </div>
         <div class="table-meta"><span id="casesCount"></span></div>
         <div class="table-wrap">
           <table class="data-table" id="casesTable">
-            <thead>
-              <tr>
-                <th>Ref</th><th>Type</th><th>Title</th><th>Customer</th><th>Location</th>
-                <th>Reported</th><th>Risk</th><th>Status</th><th><span class="sr-only">Actions</span></th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th><span class="sr-only">Select</span></th><th>Ref</th><th>Type</th><th>Title</th><th>Customer</th>
+              <th>Location</th><th>Reported</th><th>Risk</th><th>Status</th><th><span class="sr-only">Actions</span></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ---------- Actions (CAPA register) ---------- -->
+      <section class="view" id="view-actions">
+        <header class="view-head"><h1 data-i18n="actions.title">Action Register</h1><p class="muted">Every corrective / preventive action across all cases.</p></header>
+        <div class="filters card">
+          <select id="act-status" aria-label="Filter actions by status">
+            <option value="">All statuses</option><option>Open</option><option>In Progress</option><option>Done</option>
+          </select>
+          <label class="inline"><input type="checkbox" id="act-overdue" /> Overdue only</label>
+        </div>
+        <div class="table-meta"><span id="actionsMeta"></span></div>
+        <div class="table-wrap">
+          <table class="data-table" id="actionsTable">
+            <thead><tr><th>Action</th><th>Case</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -184,17 +167,12 @@
 
       <!-- ---------- Risk Matrix ---------- -->
       <section class="view" id="view-risk">
-        <header class="view-head">
-          <h1>Risk Matrix</h1>
-          <p class="muted">Triaged open reports plotted by likelihood × consequence. Click a cell to view those cases.</p>
-        </header>
+        <header class="view-head"><h1 data-i18n="risk.title">Risk Matrix</h1><p class="muted">Triaged open reports plotted by likelihood × consequence. Click a cell to view those cases.</p></header>
         <div class="card">
           <div class="matrix" id="riskMatrix"></div>
           <div class="matrix-legend">
-            <span class="risk-low">Low (1–4)</span>
-            <span class="risk-medium">Medium (5–9)</span>
-            <span class="risk-high">High (10–14)</span>
-            <span class="risk-extreme">Extreme (15–25)</span>
+            <span class="risk-low">Low (1–4)</span><span class="risk-medium">Medium (5–9)</span>
+            <span class="risk-high">High (10–14)</span><span class="risk-extreme">Extreme (15–25)</span>
             <span class="muted" id="untriagedNote"></span>
           </div>
         </div>
@@ -202,19 +180,19 @@
 
       <!-- ---------- Audits ---------- -->
       <section class="view" id="view-audits">
-        <header class="view-head">
-          <h1>Audits</h1>
-          <p class="muted">Build your own audit / inspection checklists, run them, and keep a record. Add as many custom audit types as you need.</p>
-        </header>
+        <header class="view-head"><h1 data-i18n="audits.title">Audits</h1><p class="muted">Build your own audit / inspection checklists, schedule them, run them, and keep a record.</p></header>
         <div id="auditsRoot"></div>
+      </section>
+
+      <!-- ---------- Documents ---------- -->
+      <section class="view" id="view-documents">
+        <header class="view-head"><h1 data-i18n="docs.title">Document Centre</h1><p class="muted">SOPs, SDS and policies — optionally linked to a report type so they show on matching cases.</p></header>
+        <div id="docsRoot"></div>
       </section>
 
       <!-- ---------- Reports (builder/export) ---------- -->
       <section class="view" id="view-reports">
-        <header class="view-head no-print">
-          <h1>Report Builder</h1>
-          <p class="muted">Generate a filtered summary, then print to PDF or export CSV.</p>
-        </header>
+        <header class="view-head no-print"><h1 data-i18n="reports.title">Report Builder</h1><p class="muted">Generate a filtered summary, then print to PDF or export CSV.</p></header>
         <div class="filters card no-print">
           <label class="inline">From <input type="date" id="rep-from" /></label>
           <label class="inline">To <input type="date" id="rep-to" /></label>
@@ -228,45 +206,28 @@
         <div id="reportOutput"></div>
       </section>
 
-      <!-- ---------- Data ---------- -->
-      <section class="view" id="view-data">
-        <header class="view-head">
-          <h1>Data</h1>
-          <p class="muted">Everything is stored locally in your browser (localStorage). No server, no API.</p>
-        </header>
-        <div class="card">
-          <h3>Demo data</h3>
-          <p class="muted">The sample reports are randomly generated placeholders — not real. Clear them before live use.</p>
-          <button type="button" class="btn primary" id="data-seed">Load demo data (42 reports)</button>
-          <button type="button" class="btn danger" id="data-clear">Clear all reports</button>
-        </div>
-        <div class="card">
-          <h3>Backup / restore</h3>
-          <p class="muted">Export a JSON backup, or import one (this is your “save file”).</p>
-          <button type="button" class="btn" id="data-export">Export JSON</button>
-          <button type="button" class="btn" id="data-import">Import JSON…</button>
-          <input type="file" id="importFile" accept="application/json" hidden />
-        </div>
+      <!-- ---------- Settings ---------- -->
+      <section class="view" id="view-settings">
+        <header class="view-head"><h1 data-i18n="settings.title">Settings</h1><p class="muted">Configure your lists, report types, branding, language and data. Stored locally in your browser.</p></header>
+        <div id="settingsRoot"></div>
       </section>
     </main>
   </div>
 
   <!-- ===================== Detail modal ===================== -->
   <div class="modal-backdrop" id="modal" hidden>
-    <div class="modal">
-      <button class="modal-close" id="modalClose">×</button>
-      <div id="modalBody"></div>
-    </div>
+    <div class="modal"><button type="button" class="modal-close" id="modalClose">×</button><div id="modalBody"></div></div>
   </div>
 
-  <!-- print target for single-record / audit PDFs -->
   <div id="printRoot"></div>
-
   <div class="toast" id="toast" hidden></div>
 
   <script src="assets/js/storage.js"></script>
+  <script src="assets/js/i18n.js"></script>
   <script src="assets/js/charts.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/settings.js"></script>
+  <script src="assets/js/docs.js"></script>
   <script src="assets/js/audits.js"></script>
 </body>
 </html>

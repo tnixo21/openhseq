@@ -12,6 +12,7 @@
   var root;                 // #auditsRoot
   var builderItems = [];    // questions while building a template
   var editingId = null;     // template being edited
+  var editingSchedule = { frequency: 'None', nextDue: '' };
   var running = null;       // { tpl, responses }
 
   /* -------------------------------- views --------------------------------- */
@@ -25,10 +26,17 @@
     var tpls = S.auditTemplates();
     var done = S.completedAudits();
 
+    var todayStr = S.today();
     var tplCards = tpls.length ? tpls.map(function (t) {
-      return '<div class="audit-card">' +
+      var sched = t.schedule && t.schedule.frequency && t.schedule.frequency !== 'None';
+      var due = sched && t.schedule.nextDue && t.schedule.nextDue <= todayStr;
+      var schedLine = sched
+        ? '<div class="muted">🔁 ' + esc(t.schedule.frequency) + ' · next: ' + esc(t.schedule.nextDue || '—') +
+          (due ? ' <span class="badge badge-overdue">DUE</span>' : '') + '</div>'
+        : '';
+      return '<div class="audit-card' + (due ? ' is-due' : '') + '">' +
         '<div><strong>' + esc(t.title) + '</strong> <span class="badge type">' + esc(t.category) + '</span>' +
-        '<div class="muted">' + t.items.length + ' check' + (t.items.length === 1 ? '' : 's') + '</div></div>' +
+        '<div class="muted">' + t.items.length + ' check' + (t.items.length === 1 ? '' : 's') + '</div>' + schedLine + '</div>' +
         '<div class="audit-card-actions">' +
         '<button type="button" class="btn small primary" data-run="' + t.id + '">Run</button>' +
         '<button type="button" class="btn small" data-edit="' + t.id + '">Edit</button>' +
@@ -67,7 +75,9 @@
   /* ------------------------------- builder -------------------------------- */
   function renderBuilder(tpl) {
     editingId = tpl ? tpl.id : null;
+    editingSchedule = tpl && tpl.schedule ? tpl.schedule : { frequency: 'None', nextDue: '' };
     builderItems = tpl ? tpl.items.map(function (i) { return { id: i.id, text: i.text, requireComment: !!i.requireComment }; }) : [{ id: S.uid('q'), text: '', requireComment: false }];
+    var freqs = ['None'].concat(Object.keys(S.FREQ_DAYS));
     root.innerHTML =
       '<div class="card">' +
       '<h3>' + (tpl ? 'Edit' : 'New') + ' audit type</h3>' +
@@ -76,6 +86,8 @@
       '<label>Category<select id="bld-category">' + S.CATEGORIES.map(function (c) {
         return '<option' + (tpl && tpl.category === c ? ' selected' : '') + '>' + esc(c) + '</option>';
       }).join('') + '</select></label>' +
+      '<label>Recurs<select id="bld-freq">' + freqs.map(function (f) { return '<option' + (editingSchedule.frequency === f ? ' selected' : '') + '>' + f + '</option>'; }).join('') + '</select></label>' +
+      '<label>Next due<input type="date" id="bld-nextdue" value="' + esc(editingSchedule.nextDue || '') + '" /></label>' +
       '</div>' +
       '<h4>Checklist questions</h4>' +
       '<div id="bld-items"></div>' +
@@ -212,7 +224,11 @@
       var items = builderItems.filter(function (it) { return it.text.trim(); });
       if (!title) { alert('Give the audit a title.'); return; }
       if (!items.length) { alert('Add at least one question.'); return; }
-      S.saveAuditTemplate({ id: editingId, title: title, category: $('#bld-category').value, items: items });
+      var freq = $('#bld-freq').value;
+      var nextDue = $('#bld-nextdue').value;
+      if (freq !== 'None' && !nextDue) nextDue = S.today();
+      S.saveAuditTemplate({ id: editingId, title: title, category: $('#bld-category').value, items: items,
+        schedule: { frequency: freq, nextDue: nextDue } });
       editingId = null;
       UI.toast('Audit type saved');
       return renderList();
@@ -222,13 +238,36 @@
     if (t.id === 'run-save') {
       var data = collectRun();
       if (!data) return;
+      var tplId = running.tpl.id;
       S.saveCompletedAudit(data);
+      S.advanceSchedule(tplId);             // move recurring schedule forward
       running = null;
       UI.toast('Audit saved (' + data.passRate + '%)');
+      maybeRaiseNCR(data);                  // offer to log failures as a report
       return renderList();
     }
     if (t.id === 'run-cancel') { running = null; return renderList(); }
   });
+
+  /* If an audit has failures, offer to log them as a Non-Conformance report. */
+  function maybeRaiseNCR(data) {
+    var fails = data.responses.filter(function (r) { return r.result === 'Fail'; });
+    if (!fails.length) return;
+    if (!confirm(fails.length + ' item(s) failed. Create a Non-Conformance report to track the fix?')) return;
+    var types = S.reportTypes();
+    var ncr = types.filter(function (t) { return /non-?conformance/i.test(t.id); })[0] || types[0];
+    var desc = 'Raised from audit “' + data.templateTitle + '” (' + data.date + ').\nFailed checks:\n' +
+      fails.map(function (f) { return '• ' + f.text + (f.comment ? ' — ' + f.comment : ''); }).join('\n');
+    var rec = S.add({
+      type: ncr.id, category: data.category || 'Quality',
+      title: 'Audit failures: ' + data.templateTitle,
+      description: desc, location: data.location || '', reporter: data.auditor || 'Audit',
+      severity: 3, dateOccurred: data.date, dateReported: data.date
+    });
+    S.logHistory(rec.id, 'Created from audit', data.templateTitle);
+    UI.toast('Created ' + rec.refNo);
+    if (UI.openCase) UI.openCase(rec.id);
+  }
 
   global.HSEQAudits = { render: render };
 })(window);
