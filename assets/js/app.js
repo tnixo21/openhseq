@@ -164,7 +164,6 @@
     });
   }
   $('#f-attachments').addEventListener('change', function (e) { ingestFiles(e.target.files); e.target.value = ''; });
-  if ($('#f-camera')) $('#f-camera').addEventListener('change', function (e) { ingestFiles(e.target.files); e.target.value = ''; });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
