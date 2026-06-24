@@ -28,17 +28,36 @@ team adds the technical detail later:
 - **Risk scoring**: 5×5 likelihood × consequence, auto Low/Medium/High/Extreme; un-triaged cases are flagged rather than scored.
 - **Single-case PDF**: download/print any one report from its detail view.
 
-### Audits (custom builder)
-- **Build your own audit/inspection types** — title, category, and a checklist of questions (optionally comment-required).
-- **Run** an audit (Pass/Fail/N·A + comments) → auto **pass-rate %** → saved to a record.
-- **Completed audits** log with view / PDF / delete. Ships with 3 sample templates.
+- **Close-out sign-off**: manager name + **drawn digital signature** captured when a case is closed.
+- **Change history**: per-case timeline of every status change, action and edit.
+
+### CAPA action register
+- Attach **corrective/preventive actions** to any case — owner, due date, status.
+- Dedicated **Action Register** view across all cases; **overdue** flagging throughout.
+- **SLA target-close dates** auto-set by severity; overdue cases flagged on the table and dashboard.
+
+### Audits (custom builder + scheduling)
+- **Build your own audit/inspection types** — title, category, checklist questions (optionally comment-required).
+- **Recurrence**: schedule audits (daily…quarterly) with a next-due date and a **"DUE"** badge + dashboard KPI.
+- **Run** an audit (Pass/Fail/N·A + comments) → auto **pass-rate %** → saved record (view / PDF / delete).
+- **Failed items can auto-create a linked Non-Conformance** report. Ships with 3 sample templates.
+
+### Document Centre
+- Upload **SOPs / SDS / policies**, optionally **linked to a report type**.
+- Linked documents surface as **Reference documents** on matching cases.
 
 ### Analytics & reporting
-- **KPI dashboard**: totals, open / in-progress / closed, **awaiting-triage**, high-risk-open, **near-miss : accident ratio**, **average days-to-close**.
+- **KPI dashboard**: totals, open / in-progress / closed, **awaiting-triage**, **overdue cases**, high-risk-open, **open/overdue actions**, **audits due**, **average days-to-close**.
 - **Charts** (Chart.js): by type, 12-month trend, status, H/S/E/Q, top locations, **root-cause Pareto**, **reports by severity**.
 - **Risk matrix**: interactive 5×5 heatmap of triaged open reports — click a cell to drill in.
 - **Safety pyramid** (Heinrich) and a **"days since last recordable incident"** board.
 - **Report Builder**: filter by date range / type / **status** / location → summary → **print to PDF** or **export CSV**.
+- **Cases**: saved filters and **multi-select bulk actions** (set status / delete / export).
+
+### Admin & platform
+- **Settings tab**: edit locations, departments, customers, root-causes, people and **report types**; set **org name + logo** (sidebar + PDFs).
+- **Multi-language** UI (English / Español / 简体中文).
+- **PWA**: installable, offline app-shell cache, **camera capture** on mobile, and **QR quick-raise** codes per location (scan → pre-filled report).
 - **Backup/restore**: export & import all data as JSON.
 
 ---
@@ -53,9 +72,10 @@ No build step, no dependencies to install.
 ```
 
 On first run it auto-loads 42 demo reports so the dashboards aren't empty.
-Clear them anytime under **Data → Clear all data**.
+Clear them anytime under **Settings → Data → Clear all reports**.
 
 > Chart.js loads from a CDN, so the charts need an internet connection on first load.
+> The PWA (offline install) and QR images only work when **served over http(s)** — not from `file://`.
 
 ### Deploy (later)
 Because it's fully static it drops straight onto **GitHub Pages**, Netlify, or Railway:
@@ -67,31 +87,35 @@ push the repo and point Pages at the root — no configuration needed.
 
 ```
 openhseq/
-├── index.html              # app shell + all views
+├── index.html               # app shell + all views
+├── manifest.webmanifest     # PWA manifest
+├── sw.js                    # service worker (offline app-shell cache)
 ├── assets/
+│   ├── icon.svg             # app / PWA icon
 │   ├── css/styles.css       # styling, risk bands, matrix, print rules
 │   └── js/
-│       ├── storage.js       # localStorage data layer + demo seeding + risk helpers
+│       ├── storage.js       # localStorage data layer: reports, settings, CAPA, audits, docs
+│       ├── i18n.js          # UI translations (en / es / zh)
 │       ├── charts.js        # Chart.js dashboards + safety pyramid
-│       └── app.js           # routing, forms, cases, matrix, report builder, export
+│       ├── app.js           # hub: routing, reporting, cases, CAPA, matrix, report builder
+│       ├── settings.js      # Settings tab: lists, report types, branding, QR, data tools
+│       ├── docs.js          # Document Centre
+│       └── audits.js        # custom audit builder, scheduling, failed→NCR
 └── README.md
 ```
-
-Clean separation: **storage** (data) · **charts** (visuals) · **app** (UI/logic).
 
 ---
 
 ## 🧭 Roadmap (not built yet)
 
-These were intentionally deferred (you asked to skip API/integration for now):
+Deferred until it goes onto a live server:
 
 - REST/JSON API + multi-user backend (e.g. Node + SQLite/Postgres) to replace localStorage.
 - Authentication & roles (reporter / processor / admin).
 - **Email sending** — the "email a copy to reporter" field is captured but not yet wired to a mail service.
-- Digital signatures; larger attachment storage (localStorage is browser-limited).
-- Scheduled/automatic workflows and reminders (HSEQ Planner).
-- Document Centre and timesheets modules.
-- Power BI / CSV API export endpoints.
+- Larger attachment/document storage (localStorage is browser-limited).
+- Server-side scheduled reminders for due audits and overdue actions.
+- Power BI / CSV API export endpoints; integration with CargoWise / WMS.
 
 ---
 
