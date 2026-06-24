@@ -269,5 +269,8 @@
     if (UI.openCase) UI.openCase(rec.id);
   }
 
-  global.HSEQAudits = { render: render };
+  /* let the Quick Hub launch a run directly; show('audits') then renders it */
+  function startRun(id) { var tpl = S.getAuditTemplate(id); if (tpl) running = { tpl: tpl }; }
+
+  global.HSEQAudits = { render: render, startRun: startRun };
 })(window);

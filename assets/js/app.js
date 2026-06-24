@@ -527,9 +527,47 @@
   }
   function download(name, content, mime) { var blob = new Blob([content], { type: mime || 'text/plain' }); var a = el('a', { href: URL.createObjectURL(blob), download: name }); document.body.appendChild(a); a.click(); a.remove(); }
 
+  /* ------------------------------- Quick Hub ------------------------------ */
+  /* Landing page a QR code opens: raise a report + the audits that need doing. */
+  function renderHub(loc) {
+    var o = S.org();
+    var dueIds = S.dueAudits().map(function (t) { return t.id; });
+    var tpls = S.auditTemplates();
+    var auditCards = tpls.length ? tpls.map(function (t) {
+      var isDue = dueIds.indexOf(t.id) > -1;
+      var sched = t.schedule && t.schedule.frequency && t.schedule.frequency !== 'None';
+      return '<div class="hub-audit' + (isDue ? ' due' : '') + '">' +
+        '<div><strong>' + esc(t.title) + '</strong>' + (isDue ? ' <span class="badge badge-overdue">DUE</span>' : '') +
+        (sched ? '<div class="muted">🔁 ' + esc(t.schedule.frequency) + (t.schedule.nextDue ? ' · next ' + esc(t.schedule.nextDue) : '') + '</div>' : '') +
+        '</div><button type="button" class="btn small primary" data-hub-audit="' + t.id + '">Start</button></div>';
+    }).join('') : '<p class="muted">No audit types set up yet.</p>';
+
+    $('#hubRoot').innerHTML =
+      '<div class="hub">' +
+        '<div class="hub-head">' +
+          (o.logo ? '<img class="hub-logo" src="' + o.logo + '" alt="logo" />' : '<span class="hub-mark">◆</span>') +
+          '<div><div class="hub-org">' + esc(o.name || 'OpenHSEQ') + '</div>' +
+          (loc ? '<div class="hub-loc">📍 ' + esc(loc) + '</div>' : '') + '</div>' +
+        '</div>' +
+        '<button type="button" class="hub-btn" data-hub-raise="' + esc(loc || '') + '">➕ Raise a Report</button>' +
+        '<h2 class="hub-h2">Audits to complete</h2>' +
+        '<div class="hub-audits">' + auditCards + '</div>' +
+        '<button type="button" class="hub-open">Open full app →</button>' +
+      '</div>';
+  }
+
+  $('#hubRoot').addEventListener('click', function (e) {
+    var raise = e.target.closest('[data-hub-raise]');
+    if (raise) { resetForm(); if (raise.dataset.hubRaise) $('#f-location').value = raise.dataset.hubRaise; show('new'); return; }
+    var aud = e.target.closest('[data-hub-audit]');
+    if (aud) { if (window.HSEQAudits && window.HSEQAudits.startRun) { window.HSEQAudits.startRun(aud.dataset.hubAudit); } show('audits'); return; }
+    if (e.target.closest('.hub-open')) { show('dashboard'); }
+  });
+
   /* ----------------------------- deep link -------------------------------- */
   function handleDeepLink() {
     var q = {}; (location.search || '').replace(/^\?/, '').split('&').forEach(function (kv) { if (!kv) return; var p = kv.split('='); q[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ''); });
+    if (q.hub === '1' || q.hub === 'true') { renderHub(q.location || ''); show('hub'); return true; }
     if (q.raise === '1' || q.raise === 'true') {
       resetForm();
       if (q.type) $('#f-type').value = q.type;

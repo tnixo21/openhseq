@@ -47,8 +47,9 @@
           '<button type="button" class="btn small" data-addto="' + l.key + '">+ Add</button></div>';
       }).join('') +
 
-      '<div class="card"><h3>Quick-raise QR codes</h3>' +
-        '<p class="muted">Print a code at each location; scanning opens a pre-filled report. (QR images need internet; the links work offline.)</p>' +
+      '<div class="card"><h3>Quick-access QR codes</h3>' +
+        '<p class="muted">Print a code at each location. Scanning opens that location’s hub — a “Raise a Report” button plus the audits that need doing. ' +
+        '(Works once the app is hosted at a real URL; QR images need internet.)</p>' +
         '<div id="set-qr" class="qr-grid"></div>' +
       '</div>' +
 
@@ -86,10 +87,11 @@
   function renderQR() {
     var base = location.origin && location.origin !== 'null' ? location.origin + location.pathname : location.href.split('?')[0];
     $('#set-qr').innerHTML = draft.locations.map(function (loc) {
-      var url = base + '?raise=1&location=' + encodeURIComponent(loc);
+      var url = base + '?hub=1&location=' + encodeURIComponent(loc);
       var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(url);
       return '<div class="qr-card"><img src="' + qr + '" alt="QR for ' + esc(loc) + '" loading="lazy" /><div class="qr-name">' + esc(loc) + '</div>' +
-        '<button type="button" class="btn small qr-copy" data-url="' + esc(url) + '">Copy link</button></div>';
+        '<button type="button" class="btn small qr-copy" data-url="' + esc(url) + '">Copy link</button> ' +
+        '<a class="btn small" href="' + esc(url) + '" target="_blank" rel="noopener">Preview</a></div>';
     }).join('');
   }
 

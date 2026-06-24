@@ -307,6 +307,29 @@ h3 { font-size: .95rem; margin: 0 0 12px; color: var(--text); }
 /* ------------------------------- Audits ---------------------------------- */
 .audit-card.is-due { border-color: var(--danger); box-shadow: 0 0 0 2px #fee2e2; }
 
+/* ------------------------------- Quick Hub ------------------------------- */
+.hub { max-width: 460px; margin: 0 auto; }
+.hub-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.hub-mark { font-size: 2.2rem; color: var(--primary); }
+.hub-logo { height: 52px; border-radius: 8px; }
+.hub-org { font-size: 1.3rem; font-weight: 800; }
+.hub-loc { color: var(--muted); font-weight: 600; }
+.hub-btn {
+  width: 100%; font: inherit; font-size: 1.15rem; font-weight: 700;
+  background: var(--primary); color: #fff; border: 0; border-radius: 14px;
+  padding: 20px; cursor: pointer; box-shadow: var(--shadow);
+}
+.hub-btn:hover { background: var(--primary-dark); }
+.hub-h2 { font-size: 1rem; margin: 26px 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.hub-audits { display: flex; flex-direction: column; gap: 10px; }
+.hub-audit {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; box-shadow: var(--shadow);
+}
+.hub-audit.due { border-color: var(--danger); box-shadow: 0 0 0 2px #fee2e2; }
+.hub-open { width: 100%; margin-top: 24px; background: none; border: 0; color: var(--primary); font: inherit; font-weight: 600; cursor: pointer; padding: 10px; }
+
 /* ------------------------------ Print docs ------------------------------- */
 #printRoot { display: none; }
 .print-report h1 { font-size: 1.4rem; }
