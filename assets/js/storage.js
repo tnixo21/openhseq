@@ -330,10 +330,21 @@
         { text: 'Waste segregated' }, { text: 'Spill kits stocked' } ] },
       { title: 'Fire & Emergency Readiness', category: 'Safety', items: [
         { text: 'Exits unobstructed' }, { text: 'Extinguishers tagged & in date' },
-        { text: 'Assembly point signage visible' }, { text: 'Alarm test current', requireComment: true } ] }
+        { text: 'Assembly point signage visible' }, { text: 'Alarm test current', requireComment: true } ] },
+      { title: 'Dock Condition Survey (mixed)', category: 'Quality', items: [
+        { text: 'Any spills or leaks present?', type: 'yesno', good: 'No' },
+        { text: 'Overall housekeeping rating', type: 'rating', threshold: 4 },
+        { text: 'Dock door condition', type: 'select', options: ['Good', 'Fair', 'Poor'], acceptable: ['Good', 'Fair'] },
+        { text: 'PPE observed in use', type: 'multi', options: ['Hi-vis', 'Steel caps', 'Gloves', 'Hearing'] },
+        { text: 'Ambient temperature (°C)', type: 'number', min: 5, max: 35 },
+        { text: 'Notes / observations', type: 'text' } ] }
     ];
     seeds.forEach(function (s) {
-      s.items = s.items.map(function (it) { return { id: uid('q'), text: it.text, requireComment: !!it.requireComment }; });
+      s.items = s.items.map(function (it) {
+        return { id: uid('q'), text: it.text, type: it.type || 'passfail', requireComment: !!it.requireComment,
+          options: it.options || [], good: it.good || 'Yes', acceptable: it.acceptable || [],
+          min: it.min == null ? '' : it.min, max: it.max == null ? '' : it.max, threshold: it.threshold == null ? '' : it.threshold };
+      });
       saveAuditTemplate(s);
     });
   }
