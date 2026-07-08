@@ -34,6 +34,7 @@
         <button type="button" class="nav-btn" data-view="risk"><span>⚠️</span> <span data-i18n="nav.risk">Risk Matrix</span></button>
         <button type="button" class="nav-btn" data-view="audits"><span>✅</span> <span data-i18n="nav.audits">Audits</span></button>
         <button type="button" class="nav-btn" data-view="documents"><span>📁</span> <span data-i18n="nav.documents">Documents</span></button>
+        <button type="button" class="nav-btn" data-view="qr"><span>🔳</span> <span data-i18n="nav.qr">QR Codes</span></button>
         <button type="button" class="nav-btn" data-view="reports"><span>📈</span> <span data-i18n="nav.reports">Reports</span></button>
         <button type="button" class="nav-btn" data-view="settings"><span>⚙️</span> <span data-i18n="nav.settings">Settings</span></button>
       </nav>
@@ -199,6 +200,12 @@
       <section class="view" id="view-documents">
         <header class="view-head"><h1 data-i18n="docs.title">Document Centre</h1><p class="muted">SOPs, SDS and policies — optionally linked to a report type so they show on matching cases.</p></header>
         <div id="docsRoot"></div>
+      </section>
+
+      <!-- ---------- QR Codes ---------- -->
+      <section class="view" id="view-qr">
+        <header class="view-head"><h1>Quick-access QR codes</h1><p class="muted">Print a code per location — scanning opens that location’s hub (raise a report + audits due).</p></header>
+        <div id="qrRoot"></div>
       </section>
 
       <!-- ---------- Reports (builder/export) ---------- -->

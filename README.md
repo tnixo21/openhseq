@@ -24,17 +24,21 @@ Passwords are hashed (SHA‑256 + per‑user salt) in `localStorage`; the sessio
 
 **Six access levels** (every level can raise reports, run audits, and view completed audits):
 
-| Lvl | Raise reports | Build audit types | Reports they can view | Dashboards | Can hide reports |
-|:--:|:--:|:--:|---|:--:|:--:|
-| 1 | ✓ | — | — | — | — |
-| 2 | ✓ | — | — | — | — |
-| 3 | ✓ | — | assigned to / raised by them | — | — |
-| 4 | ✓ | ✓ | assigned to / raised by them | ✓ | — |
-| 5 | ✓ | ✓ | all **non-hidden** reports | ✓ | ✓ |
-| 6 (owner) | ✓ | ✓ | **all** reports incl. hidden | ✓ | ✓ + manage users |
+| Lvl | Raise reports | Build audit types | Reports they can view | Dashboards | QR codes | Hide reports | Settings / users |
+|:--:|:--:|:--:|---|:--:|:--:|:--:|:--:|
+| 1 | ✓ | — | — | — | — | — | — |
+| 2 | ✓ | — | — | — | — | — | — |
+| 3 | ✓ | — | assigned to / raised by them | — | — | — | — |
+| 4 | ✓ | ✓ | assigned to / raised by them | ✓ | ✓ | — | — |
+| 5 | ✓ | ✓ | all **non-hidden** reports | ✓ | ✓ | ✓ | Settings + manage users **up to level 5** |
+| 6 (owner) | ✓ | ✓ | **all** reports incl. hidden | ✓ | ✓ | ✓ | Full Settings + grant any level incl. 6 |
 
-*(Everyone can **run** audits and view completed audit records; **creating/editing/deleting audit
-types** is level 4+.)*
+Notes:
+- Everyone can **run** audits and view completed audit records; **creating/editing/deleting audit types** is level 4+.
+- **QR codes** live on their own tab (level 4+); locations still come from Settings.
+- **Settings** (incl. user maintenance) opens at level 5. A level-5 admin can add/edit/deactivate/delete
+  users and reset passwords **up to level 5**, but only the **owner (level 6)** can grant or manage
+  level-6 access — level-6 rows are read-only to a level-5 admin.
 
 **Hidden reports**: level 5+ users get a *🔒 Hide this report* option when raising one. Hidden
 reports are visible only to the owner (level 6) — they are filtered out of every list, dashboard,

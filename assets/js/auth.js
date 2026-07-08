@@ -163,8 +163,11 @@
       viewReports: level >= 3,
       dashboards: level >= 4,
       createAudits: level >= 4,                             // build/edit/delete audit types
+      qrCodes: level >= 4,                                  // Quick-access QR codes tab
       canHide: level >= 5,
-      manageUsers: level >= 6
+      settings: level >= 5,                                 // Settings page (incl. user maintenance)
+      manageUsers: level >= 5,                              // add/manage users…
+      grantOwner: level >= 6                                // …but only L6 can grant/manage level-6 access
     };
   }
   function myCaps() { var u = currentUser(); return caps(u ? u.level : 0); }
@@ -234,32 +237,55 @@
     5: '+ All non-hidden reports · can hide',
     6: 'Owner — everything incl. hidden'
   };
-  function levelOptions(sel) {
+  function levelOptions(sel, maxLvl) {
+    maxLvl = maxLvl || 6;
     var out = '';
-    for (var l = 1; l <= 6; l++) out += '<option value="' + l + '"' + (Number(sel) === l ? ' selected' : '') + '>' + l + ' — ' + esc(LEVEL_DESC[l]) + '</option>';
+    for (var l = 1; l <= maxLvl; l++) out += '<option value="' + l + '"' + (Number(sel) === l ? ' selected' : '') + '>' + l + ' — ' + esc(LEVEL_DESC[l]) + '</option>';
     return out;
+  }
+
+  // Which target users the signed-in admin may edit/delete/reset.
+  //  - Owner row: level & delete always locked; only a level-6 admin may reset its password.
+  //  - A level-6 user (non-owner): manageable only by a level-6 admin (grantOwner).
+  //  - A level ≤5 user: manageable by any admin (level 5+).
+  function canManage(admin, target) {
+    if (isOwner(target)) return false;                 // owner is never level/delete-editable
+    if (target.level >= 6) return admin.grantOwner;    // level-6 rights are level-6 only
+    return true;
   }
 
   function renderUsers(container) {
     var me = currentUser();
     if (!me || !caps(me.level).manageUsers) { container.innerHTML = ''; return; }
+    var admin = caps(me.level);
+    var maxAssignable = admin.grantOwner ? 6 : 5;      // only L6 admins can grant level 6
     var list = readUsers().slice().sort(function (a, b) { return b.level - a.level || norm(a.email).localeCompare(norm(b.email)); });
     var rows = list.map(function (u) {
       var owner = isOwner(u);
+      var manageable = canManage(admin, u);
+      var levelCell = owner || !manageable
+        ? '<select class="u-level" disabled aria-label="Access level">' + levelOptions(u.level, 6) + '</select>'
+        : '<select class="u-level" aria-label="Access level">' + levelOptions(u.level, maxAssignable) + '</select>';
+      var statusCell = owner ? '<span class="badge status-Closed">Active</span>'
+        : manageable ? '<label class="inline"><input type="checkbox" class="u-active"' + (u.active ? ' checked' : '') + ' /> Active</label>'
+        : '<span class="badge ' + (u.active ? 'status-Closed' : 'status-Open') + '">' + (u.active ? 'Active' : 'Inactive') + '</span>';
+      var resetBtn = (owner ? admin.grantOwner : manageable) ? '<button type="button" class="btn small u-pass">Reset password</button>' : '';
+      var delBtn = manageable ? ' <button type="button" class="btn small danger u-del">Delete</button>' : '';
       return '<tr data-uid="' + u.id + '">' +
         '<td><strong>' + esc(u.email) + '</strong>' + (owner ? ' <span class="badge type">owner</span>' : '') + '<div class="muted">' + esc(u.name) + '</div></td>' +
-        '<td><select class="u-level" ' + (owner ? 'disabled' : '') + ' aria-label="Access level">' + levelOptions(u.level) + '</select></td>' +
-        '<td>' + (owner ? '<span class="badge status-Closed">Active</span>'
-          : '<label class="inline"><input type="checkbox" class="u-active"' + (u.active ? ' checked' : '') + ' /> Active</label>') + '</td>' +
-        '<td class="u-actions">' +
-          '<button type="button" class="btn small u-pass">Reset password</button>' +
-          (owner ? '' : ' <button type="button" class="btn small danger u-del">Delete</button>') +
-        '</td></tr>';
+        '<td>' + levelCell + '</td>' +
+        '<td>' + statusCell + '</td>' +
+        '<td class="u-actions">' + (resetBtn || delBtn ? resetBtn + delBtn : '<span class="muted">—</span>') + '</td>' +
+        '</tr>';
     }).join('');
+
+    var note = admin.grantOwner
+      ? 'Owner (level 6) can grant any level. Levels: 1 raise-only … 6 full access.'
+      : 'You can manage users up to level 5. Only the owner (level 6) can grant level-6 access. Level-6 users are read-only here.';
 
     container.innerHTML =
       '<div class="card"><h3>Users &amp; access</h3>' +
-        '<p class="muted">Owner-only. Levels: 1 raise-only … 6 full access. Changes apply the next time that user loads a screen.</p>' +
+        '<p class="muted">' + note + ' Changes apply the next time that user loads a screen.</p>' +
         '<div class="table-wrap"><table class="data-table" id="usersTable"><thead><tr>' +
           '<th>User</th><th>Access level</th><th>Status</th><th>Actions</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
@@ -267,7 +293,7 @@
         '<div class="form-grid">' +
           '<label>Email<input type="email" id="nu-email" placeholder="name@bws.dk" /></label>' +
           '<label>Display name<input type="text" id="nu-name" placeholder="Optional" /></label>' +
-          '<label>Access level<select id="nu-level">' + levelOptions(1) + '</select></label>' +
+          '<label>Access level<select id="nu-level">' + levelOptions(1, maxAssignable) + '</select></label>' +
           '<label>Temporary password<input type="password" id="nu-pass" placeholder="At least 6 characters" autocomplete="new-password" /></label>' +
         '</div>' +
         '<div class="auth-err" id="nu-err" hidden></div>' +
@@ -278,25 +304,35 @@
     var table = container.querySelector('#usersTable');
     table.addEventListener('change', function (e) {
       var tr = e.target.closest('tr[data-uid]'); if (!tr) return; var id = tr.dataset.uid;
-      if (e.target.classList.contains('u-level')) { updateUser(id, { level: Number(e.target.value) }); toast('Level updated'); }
+      var u = readUsers().filter(function (x) { return x.id === id; })[0]; if (!u || !canManage(admin, u)) return;
+      if (e.target.classList.contains('u-level')) {
+        var lvl = Number(e.target.value);
+        if (lvl >= 6 && !admin.grantOwner) { alert('Only the owner can grant level-6 access.'); renderUsers(container); return; }
+        updateUser(id, { level: lvl }); toast('Level updated');
+      }
       if (e.target.classList.contains('u-active')) { updateUser(id, { active: e.target.checked }); toast(e.target.checked ? 'Activated' : 'Deactivated'); }
     });
     table.addEventListener('click', function (e) {
       var tr = e.target.closest('tr[data-uid]'); if (!tr) return; var id = tr.dataset.uid;
       var u = readUsers().filter(function (x) { return x.id === id; })[0]; if (!u) return;
+      var resettable = isOwner(u) ? admin.grantOwner : canManage(admin, u);
       if (e.target.classList.contains('u-del')) {
+        if (!canManage(admin, u)) return;
         if (!confirm('Delete user ' + u.email + '?')) return;
         try { removeUser(id); renderUsers(container); toast('User deleted'); } catch (ex) { alert(ex.message); }
       }
       if (e.target.classList.contains('u-pass')) {
+        if (!resettable) return;
         var np = prompt('New password for ' + u.email + ' (min 6 chars):'); if (np == null) return;
         setPassword(id, np).then(function () { toast('Password reset'); }).catch(function (ex) { alert(ex.message); });
       }
     });
     container.querySelector('#nu-add').addEventListener('click', function () {
       var err = container.querySelector('#nu-err'); err.hidden = true;
+      var lvl = Number(container.querySelector('#nu-level').value);
+      if (lvl >= 6 && !admin.grantOwner) { err.textContent = 'Only the owner can grant level-6 access.'; err.hidden = false; return; }
       createUser({ email: container.querySelector('#nu-email').value, name: container.querySelector('#nu-name').value,
-        level: Number(container.querySelector('#nu-level').value), password: container.querySelector('#nu-pass').value })
+        level: lvl, password: container.querySelector('#nu-pass').value })
         .then(function () { renderUsers(container); toast('User added'); })
         .catch(function (ex) { err.textContent = ex.message; err.hidden = false; });
     });
@@ -328,6 +364,6 @@
     readUsers: readUsers, renderUsers: renderUsers, OWNER_EMAIL: OWNER_EMAIL,
     // account operations (used by the UI; exported for reuse/testing)
     login: login, createUser: createUser, setPassword: setPassword,
-    updateUser: updateUser, removeUser: removeUser, findByEmail: findByEmail
+    updateUser: updateUser, removeUser: removeUser, findByEmail: findByEmail, canManage: canManage
   };
 })(window);

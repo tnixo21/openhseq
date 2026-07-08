@@ -48,12 +48,6 @@
           '<button type="button" class="btn small" data-addto="' + l.key + '">+ Add</button></div>';
       }).join('') +
 
-      '<div class="card"><h3>Quick-access QR codes</h3>' +
-        '<p class="muted">Print a code at each location. Scanning opens that location’s hub — a “Raise a Report” button plus the audits that need doing. ' +
-        '(Works once the app is hosted at a real URL; QR images need internet.)</p>' +
-        '<div id="set-qr" class="qr-grid"></div>' +
-      '</div>' +
-
       '<div class="form-actions"><button type="button" class="btn primary" id="set-save">Save settings</button>' +
       '<button type="button" class="btn" id="set-cancel">Cancel</button></div>' +
 
@@ -66,7 +60,7 @@
         '<input type="file" id="importFile" accept="application/json" hidden />' +
       '</div>';
 
-    renderTypes(); LISTS.forEach(function (l) { renderList(l.key); }); renderQR();
+    renderTypes(); LISTS.forEach(function (l) { renderList(l.key); });
     if (window.HSEQAuth) window.HSEQAuth.renderUsers(document.getElementById('usersRoot'));
   }
 
@@ -86,17 +80,6 @@
         '<button type="button" class="btn small danger set-del" aria-label="Remove">×</button></div>';
     }).join('');
   }
-  function renderQR() {
-    var base = location.origin && location.origin !== 'null' ? location.origin + location.pathname : location.href.split('?')[0];
-    $('#set-qr').innerHTML = draft.locations.map(function (loc) {
-      var url = base + '?hub=1&location=' + encodeURIComponent(loc);
-      var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(url);
-      return '<div class="qr-card"><img src="' + qr + '" alt="QR for ' + esc(loc) + '" loading="lazy" /><div class="qr-name">' + esc(loc) + '</div>' +
-        '<button type="button" class="btn small qr-copy" data-url="' + esc(url) + '">Copy link</button> ' +
-        '<a class="btn small" href="' + esc(url) + '" target="_blank" rel="noopener">Preview</a></div>';
-    }).join('');
-  }
-
   function syncDraft() {
     if ($('#set-orgname')) draft.org.name = $('#set-orgname').value.trim();
     Array.prototype.forEach.call(document.querySelectorAll('#set-types .type-row'), function (row) {
@@ -123,12 +106,6 @@
     if (addto) { syncDraft(); draft[addto].push(''); renderList(addto); return; }
     if (t.classList && t.classList.contains('set-del')) { var box = t.closest('.set-list'); var key = box.dataset.list; syncDraft(); draft[key].splice(Number(t.closest('.set-item').dataset.i), 1); renderList(key); return; }
     if (t.id === 'set-logo-remove') { draft.org.logo = ''; render(); return; }
-    if (t.classList && t.classList.contains('qr-copy')) {
-      var url = t.dataset.url;
-      if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { UI.toast('Link copied'); }, function () { prompt('Copy this link:', url); });
-      else prompt('Copy this link:', url);
-      return;
-    }
     if (t.id === 'set-cancel') { render(); UI.toast('Reverted'); return; }
     if (t.id === 'set-save') {
       syncDraft();

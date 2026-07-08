@@ -20,7 +20,8 @@
       case 'audits': return c.audits;
       case 'documents': return true;
       case 'new': return c.raiseReports;
-      case 'settings': return c.manageUsers;
+      case 'qr': return c.qrCodes;
+      case 'settings': return c.settings;
       case 'hub': return true;
       default: return true;
     }
@@ -68,6 +69,7 @@
     if (view === 'risk') renderMatrix();
     if (view === 'audits' && window.HSEQAudits) window.HSEQAudits.render();
     if (view === 'documents' && window.HSEQDocs) window.HSEQDocs.render();
+    if (view === 'qr') renderQRView();
     if (view === 'settings' && window.HSEQSettings) window.HSEQSettings.render();
     if (view === 'new' && !$('#f-id').value) resetForm();
     if (window.HSEQI18n) window.HSEQI18n.apply();
@@ -587,6 +589,29 @@
     download('hseq-report.csv', rows.join('\n'), 'text/csv'); toast('CSV exported (' + list.length + ' rows)');
   }
   function download(name, content, mime) { var blob = new Blob([content], { type: mime || 'text/plain' }); var a = el('a', { href: URL.createObjectURL(blob), download: name }); document.body.appendChild(a); a.click(); a.remove(); }
+
+  /* ---------------------------- QR codes tab ------------------------------ */
+  /* Print a code per location; scanning opens that location's Quick Hub. */
+  function renderQRView() {
+    var base = location.origin && location.origin !== 'null' ? location.origin + location.pathname : location.href.split('?')[0];
+    var cards = S.locations().map(function (loc) {
+      var url = base + '?hub=1&location=' + encodeURIComponent(loc);
+      var qr = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(url);
+      return '<div class="qr-card"><img src="' + qr + '" alt="QR for ' + esc(loc) + '" loading="lazy" /><div class="qr-name">' + esc(loc) + '</div>' +
+        '<button type="button" class="btn small qr-copy" data-url="' + esc(url) + '">Copy link</button> ' +
+        '<a class="btn small" href="' + esc(url) + '" target="_blank" rel="noopener">Preview</a></div>';
+    }).join('');
+    $('#qrRoot').innerHTML = '<div class="card"><h3>Quick-access QR codes</h3>' +
+      '<p class="muted">Print a code at each location. Scanning opens that location’s hub — a “Raise a Report” button plus the audits that need doing. ' +
+      'Locations come from Settings. (QR images need internet.)</p>' +
+      '<div class="qr-grid">' + (cards || '<p class="muted">No locations configured.</p>') + '</div></div>';
+  }
+  $('#qrRoot').addEventListener('click', function (e) {
+    var c = e.target.closest('.qr-copy'); if (!c) return;
+    var url = c.dataset.url;
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast('Link copied'); }, function () { prompt('Copy this link:', url); });
+    else prompt('Copy this link:', url);
+  });
 
   /* ------------------------------- Quick Hub ------------------------------ */
   /* Landing page a QR code opens: raise a report + the audits that need doing. */
