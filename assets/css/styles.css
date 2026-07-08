@@ -49,6 +49,7 @@ h3 { font-size: .95rem; margin: 0 0 12px; color: var(--text); }
 .brand-sub { font-size: .72rem; color: #94a3b8; }
 
 .nav { display: flex; flex-direction: column; gap: 2px; padding: 8px; flex: 1; }
+.nav-btn[hidden] { display: none; }      /* role-gated nav items must actually hide */
 .nav-btn {
   display: flex; align-items: center; gap: 10px;
   background: none; border: 0; color: #cbd5e1;
@@ -347,6 +348,50 @@ h3 { font-size: .95rem; margin: 0 0 12px; color: var(--text); }
 .print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 6px 9px; text-align: left; font-size: .85rem; vertical-align: top; }
 .print-table th { background: #f1f5f9; }
 .print-foot { color: #94a3b8; font-size: .72rem; margin-top: 18px; }
+
+/* ------------------------------ Auth gate -------------------------------- */
+.auth-gate {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
+}
+.auth-gate[hidden] { display: none; }   /* class display:flex would otherwise beat the hidden attr */
+body.locked { overflow: hidden; }
+.auth-card {
+  width: 100%; max-width: 400px; background: var(--surface);
+  border-radius: 16px; padding: 28px; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+}
+.auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.auth-mark { font-size: 1.8rem; color: var(--primary); }
+.auth-title { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+.auth-sub { color: var(--muted); font-size: .85rem; }
+.auth-note { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 0 0 16px; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form label { display: flex; flex-direction: column; gap: 5px; font-size: .82rem; color: var(--muted); font-weight: 600; }
+.auth-form input { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text); }
+.auth-form input:focus { outline: 2px solid #bfdbfe; border-color: var(--primary); }
+.auth-form input[readonly] { background: var(--surface-2); color: var(--muted); }
+.auth-btn { margin-top: 6px; padding: 11px; font-size: .95rem; }
+.auth-err { color: var(--danger); font-size: .82rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 10px; }
+.auth-foot { font-size: .75rem; margin: 14px 0 0; text-align: center; }
+
+/* --------------------------- Sidebar user box ---------------------------- */
+.user-box {
+  margin-top: 12px; padding: 10px 12px; background: var(--bg-2); border-radius: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.user-box[hidden] { display: none; }     /* hidden attr must beat display:flex */
+.user-meta { display: flex; flex-direction: column; min-width: 0; }
+.user-name { color: #fff; font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-level { color: #94a3b8; font-size: .7rem; }
+.user-logout { flex: none; }
+
+/* ---------------------------- User management ---------------------------- */
+.form label[hidden] { display: none; }   /* e.g. hide-report-row when user can't hide */
+.hide-report-row .inline { font-weight: 600; }
+#usersTable td { vertical-align: middle; }
+.u-actions { white-space: nowrap; }
+.u-level { max-width: 260px; }
 
 /* --------------------------------- Print --------------------------------- */
 @media print {

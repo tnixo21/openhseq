@@ -10,6 +10,38 @@ site you can open by double-clicking `index.html`. All data lives in your browse
 
 ---
 
+## 🔐 Access control (logins & roles)
+
+The app is locked behind a login. The **owner** account (`tnix@bws.dk`, full access) is
+pre-created on first run with the password **`Bluewater.1`** — sign in and change it under
+**Settings → Users & access → Reset password**. The owner adds/manages everyone else there.
+Passwords are hashed (SHA‑256 + per‑user salt) in `localStorage`; the session lives in
+`sessionStorage` (clears when the tab closes).
+
+> ⚠️ This is **client-side access control**, not server security — it gates the UI and enforces
+> roles, but a determined user with browser dev-tools can reach the underlying `localStorage`.
+> There is no backend to enforce it server-side. Fine for internal, trusted-network use.
+
+**Six access levels** (every level can raise reports, run audits, and view completed audits):
+
+| Lvl | Raise reports | Build audit types | Reports they can view | Dashboards | Can hide reports |
+|:--:|:--:|:--:|---|:--:|:--:|
+| 1 | ✓ | — | — | — | — |
+| 2 | ✓ | — | — | — | — |
+| 3 | ✓ | — | assigned to / raised by them | — | — |
+| 4 | ✓ | ✓ | assigned to / raised by them | ✓ | — |
+| 5 | ✓ | ✓ | all **non-hidden** reports | ✓ | ✓ |
+| 6 (owner) | ✓ | ✓ | **all** reports incl. hidden | ✓ | ✓ + manage users |
+
+*(Everyone can **run** audits and view completed audit records; **creating/editing/deleting audit
+types** is level 4+.)*
+
+**Hidden reports**: level 5+ users get a *🔒 Hide this report* option when raising one. Hidden
+reports are visible only to the owner (level 6) — they are filtered out of every list, dashboard,
+and export for everyone else.
+
+---
+
 ## ✨ Features
 
 ### Staged reporting workflow (built for the floor)

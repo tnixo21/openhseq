@@ -12,6 +12,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
+  <!-- ===================== Auth gate (login / first-run) ===================== -->
+  <div class="auth-gate" id="authGate" hidden></div>
+
   <div class="layout">
     <!-- ===================== Sidebar ===================== -->
     <aside class="sidebar">
@@ -38,6 +41,13 @@
         <div class="safety-board">
           <div class="safety-num" id="daysSinceIncident">—</div>
           <div class="safety-lbl" data-i18n="safety.days">days since last recordable incident</div>
+        </div>
+        <div class="user-box" id="userBox" hidden>
+          <div class="user-meta">
+            <span class="user-name" id="userName">—</span>
+            <span class="user-level" id="userLevel"></span>
+          </div>
+          <button type="button" class="btn small user-logout" id="btnLogout">Sign out</button>
         </div>
       </div>
     </aside>
@@ -92,6 +102,10 @@
             <label>Email a copy to (reporter)
               <input type="email" id="f-notifyEmail" placeholder="name@company.com" />
               <small class="hint">📭 Email sending isn’t live yet — this just records where the copy will go when it is.</small>
+            </label>
+            <label class="span2 hide-report-row" id="hideReportRow" hidden>
+              <span class="inline"><input type="checkbox" id="f-hidden" /> 🔒 Hide this report</span>
+              <small class="hint">Restricted: only the owner (level&nbsp;6) can see hidden reports. Use for sensitive or confidential matters.</small>
             </label>
             <label class="span2">Attachments (photos / files)
               <input type="file" id="f-attachments" multiple accept="image/*,application/pdf" />
@@ -223,6 +237,7 @@
   <div class="toast" id="toast" hidden></div>
 
   <script src="assets/js/storage.js"></script>
+  <script src="assets/js/auth.js"></script>
   <script src="assets/js/i18n.js"></script>
   <script src="assets/js/charts.js"></script>
   <script src="assets/js/app.js"></script>

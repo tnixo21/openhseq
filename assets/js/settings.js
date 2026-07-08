@@ -27,6 +27,7 @@
     }).join('');
 
     root.innerHTML =
+      '<div id="usersRoot"></div>' +
       '<div class="card"><h3>Organisation &amp; branding</h3>' +
         '<div class="form-grid">' +
         '<label>Organisation name<input type="text" id="set-orgname" value="' + esc(draft.org.name || '') + '" /></label>' +
@@ -66,6 +67,7 @@
       '</div>';
 
     renderTypes(); LISTS.forEach(function (l) { renderList(l.key); }); renderQR();
+    if (window.HSEQAuth) window.HSEQAuth.renderUsers(document.getElementById('usersRoot'));
   }
 
   function renderTypes() {

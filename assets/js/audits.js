@@ -16,8 +16,11 @@
   'use strict';
   var S = window.HSEQStore;
   var UI = window.HSEQUI;
+  var A = window.HSEQAuth;
   function esc(s) { return UI.esc(s); }
   function $(sel, root) { return (root || document).querySelector(sel); }
+  // Building audit types (new/edit/delete) is level 4+. Everyone can still Run audits.
+  function canCreateAudits() { return !A || A.myCaps().createAudits; }
 
   var QTYPES = [
     { id: 'passfail', label: 'Pass / Fail / N·A' },
@@ -43,6 +46,7 @@
   function render() { root = document.getElementById('auditsRoot'); if (running) return renderRun(); renderList(); }
 
   function renderList() {
+    var canBuild = canCreateAudits();
     var tpls = S.auditTemplates(), done = S.completedAudits(), todayStr = S.today();
     var tplCards = tpls.length ? tpls.map(function (t) {
       var sched = t.schedule && t.schedule.frequency && t.schedule.frequency !== 'None';
@@ -53,10 +57,10 @@
         '<div class="muted">' + t.items.length + ' question' + (t.items.length === 1 ? '' : 's') + '</div>' + schedLine + '</div>' +
         '<div class="audit-card-actions">' +
         '<button type="button" class="btn small primary" data-run="' + t.id + '">Run</button>' +
-        '<button type="button" class="btn small" data-edit="' + t.id + '">Edit</button>' +
-        '<button type="button" class="btn small danger" data-deltpl="' + t.id + '">Delete</button>' +
+        (canBuild ? '<button type="button" class="btn small" data-edit="' + t.id + '">Edit</button>' +
+        '<button type="button" class="btn small danger" data-deltpl="' + t.id + '">Delete</button>' : '') +
         '</div></div>';
-    }).join('') : '<p class="empty">No audit types yet — create one.</p>';
+    }).join('') : '<p class="empty">No audit types yet' + (canBuild ? ' — create one.' : '.') + '</p>';
 
     var doneRows = done.length ? done.map(function (a) {
       return '<tr><td><strong>' + esc(a.templateTitle) + '</strong></td><td>' + esc(a.date) + '</td><td>' + esc(a.auditor || '—') +
@@ -68,7 +72,7 @@
 
     root.innerHTML =
       '<div class="card"><div class="audit-head"><h3>Audit types</h3>' +
-      '<button type="button" class="btn primary" id="aud-new">+ New audit type</button></div>' +
+      (canBuild ? '<button type="button" class="btn primary" id="aud-new">+ New audit type</button>' : '') + '</div>' +
       '<div class="audit-grid">' + tplCards + '</div></div>' +
       '<div class="card"><h3>Completed audits</h3>' +
       '<div class="table-wrap"><table class="data-table"><thead><tr>' +
@@ -266,10 +270,10 @@
   document.addEventListener('click', function (e) {
     if (!root) root = document.getElementById('auditsRoot');
     var t = e.target;
-    if (t.id === 'aud-new') return renderBuilder(null);
+    if (t.id === 'aud-new') { if (!canCreateAudits()) return; return renderBuilder(null); }
     var run = t.closest('[data-run]'); if (run) { running = { tpl: S.getAuditTemplate(run.dataset.run) }; return renderRun(); }
-    var ed = t.closest('[data-edit]'); if (ed) return renderBuilder(S.getAuditTemplate(ed.dataset.edit));
-    var dt = t.closest('[data-deltpl]'); if (dt) { if (confirm('Delete this audit type?')) { S.removeAuditTemplate(dt.dataset.deltpl); renderList(); } return; }
+    var ed = t.closest('[data-edit]'); if (ed) { if (!canCreateAudits()) return; return renderBuilder(S.getAuditTemplate(ed.dataset.edit)); }
+    var dt = t.closest('[data-deltpl]'); if (dt) { if (!canCreateAudits()) return; if (confirm('Delete this audit type?')) { S.removeAuditTemplate(dt.dataset.deltpl); renderList(); } return; }
     var va = t.closest('[data-viewaud]'); if (va) return viewAudit(S.getCompletedAudit(va.dataset.viewaud));
     var pa = t.closest('[data-printaud]'); if (pa) return UI.printDoc(auditDocHTML(S.getCompletedAudit(pa.dataset.printaud)));
     var da = t.closest('[data-delaud]'); if (da) { if (confirm('Delete this audit record?')) { S.removeCompletedAudit(da.dataset.delaud); renderList(); } return; }
@@ -282,6 +286,7 @@
     }
     if (t.id === 'bld-cancel') { editingId = null; return renderList(); }
     if (t.id === 'bld-save') {
+      if (!canCreateAudits()) return;
       syncBuilderFromDom();
       var title = $('#bld-title').value.trim();
       var items = builderItems.filter(function (it) { return it.text.trim(); });

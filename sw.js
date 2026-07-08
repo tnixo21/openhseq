@@ -1,7 +1,7 @@
 /* OpenHSEQ service worker — offline app shell cache.
    Active only when served over http(s); ignored on file://.
    Bump CACHE when you change cached files. */
-const CACHE = 'openhseq-v1';
+const CACHE = 'openhseq-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './assets/icon.svg',
   './assets/css/styles.css',
   './assets/js/storage.js',
+  './assets/js/auth.js',
   './assets/js/i18n.js',
   './assets/js/charts.js',
   './assets/js/app.js',

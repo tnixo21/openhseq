@@ -6,7 +6,30 @@
    ========================================================================== */
 (function () {
   'use strict';
-  var S = window.HSEQStore, C = window.HSEQCharts;
+  var S = window.HSEQStore, C = window.HSEQCharts, A = window.HSEQAuth;
+
+  /* ---- access helpers: scope report data to what the user may see -------- */
+  function visible() { return A ? A.scope(S.all()) : S.all(); }
+  function visibleActions() { var ids = {}; visible().forEach(function (r) { ids[r.id] = 1; }); return S.allActions().filter(function (a) { return ids[a.reportId]; }); }
+  function myCaps() { return A ? A.myCaps() : { raiseReports: true, audits: true, viewReports: true, dashboards: true, canHide: false, manageUsers: false, reportsScope: 'all' }; }
+  function canView(view) {
+    var c = myCaps();
+    switch (view) {
+      case 'dashboard': case 'reports': case 'risk': return c.dashboards;
+      case 'cases': case 'actions': return c.viewReports;
+      case 'audits': return c.audits;
+      case 'documents': return true;
+      case 'new': return c.raiseReports;
+      case 'settings': return c.manageUsers;
+      case 'hub': return true;
+      default: return true;
+    }
+  }
+  function defaultView() {
+    var order = ['dashboard', 'cases', 'audits', 'new'];
+    for (var i = 0; i < order.length; i++) if (canView(order[i])) return order[i];
+    return 'new';
+  }
 
   /* ------------------------------- helpers -------------------------------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -34,6 +57,7 @@
 
   /* ------------------------------- routing -------------------------------- */
   function show(view) {
+    if (!canView(view)) { view = defaultView(); }        // block direct access to gated views
     $all('.view').forEach(function (v) { v.classList.remove('active'); });
     var target = $('#view-' + view);
     if (target) target.classList.add('active');
@@ -50,6 +74,31 @@
     window.scrollTo(0, 0);
   }
   $('#nav').addEventListener('click', function (e) { var b = e.target.closest('.nav-btn'); if (b) show(b.dataset.view); });
+
+  /* ---- apply the current user's access to the chrome (nav, user box, form) */
+  function applyAccess() {
+    var u = A ? A.currentUser() : null;
+    var box = $('#userBox');
+    if (A && !u) {                                    // logged out — hide chrome (gate overlays anyway)
+      $all('.nav-btn').forEach(function (b) { b.hidden = true; });
+      if (box) box.hidden = true;
+      return;
+    }
+    var c = myCaps();
+    // show/hide nav items per capability
+    $all('.nav-btn').forEach(function (b) { b.hidden = !canView(b.dataset.view); });
+    // hide-report option only for level 5+
+    var hr = $('#hideReportRow'); if (hr) hr.hidden = !c.canHide;
+    if (!c.canHide) { var hc = $('#f-hidden'); if (hc) hc.checked = false; }
+    // user box in the sidebar
+    if (box && u) {
+      box.hidden = false;
+      $('#userName').textContent = u.name || u.email;
+      $('#userLevel').textContent = 'Level ' + u.level + (A.isOwner(u) ? ' · owner' : '');
+    }
+  }
+  var logoutBtn = $('#btnLogout');
+  if (logoutBtn) logoutBtn.addEventListener('click', function () { if (A) A.logout(); });
 
   /* --------------------------- populate selects --------------------------- */
   function fillOptions(sel, values, opts) {
@@ -75,7 +124,7 @@
   }
   function refreshDynamicFilters() {
     var locs = {};
-    S.all().forEach(function (r) { if (r.location) locs[r.location] = 1; });
+    visible().forEach(function (r) { if (r.location) locs[r.location] = 1; });
     S.locations().forEach(function (l) { locs[l] = 1; });
     fillOptions($('#flt-location'), Object.keys(locs).sort(), { placeholder: 'All locations' });
     fillOptions($('#rep-location'), Object.keys(locs).sort(), { placeholder: 'All locations' });
@@ -92,7 +141,7 @@
   }
 
   /* ------------------------------ Dashboard ------------------------------- */
-  function renderDashboard() { var list = S.all(); renderKPIs(list); renderDaysSince(list); C.renderAll(list); }
+  function renderDashboard() { var list = visible(); renderKPIs(list); renderDaysSince(list); C.renderAll(list); }
 
   function renderKPIs(list) {
     var open = list.filter(function (r) { return r.status === 'Open'; }).length;
@@ -101,7 +150,7 @@
     var untriaged = list.filter(function (r) { return r.status !== 'Closed' && r.riskScore == null; }).length;
     var overdue = list.filter(function (r) { return S.caseOverdue(r); }).length;
     var highRiskOpen = list.filter(function (r) { return r.status !== 'Closed' && r.riskScore >= 10; }).length;
-    var actions = S.allActions();
+    var actions = visibleActions();
     var openActions = actions.filter(function (a) { return a.status !== 'Done'; }).length;
     var overdueActions = actions.filter(function (a) { return S.actionOverdue(a); }).length;
     var dueAudits = S.dueAudits().length;
@@ -144,6 +193,7 @@
     $('#f-severity').value = rec.severity || rec.consequence || 3; $('#f-location').value = rec.location;
     $('#f-department').value = rec.department || ''; $('#f-dateOccurred').value = rec.dateOccurred;
     $('#f-reporter').value = rec.reporter; $('#f-assignedTo').value = rec.assignedTo || ''; $('#f-notifyEmail').value = rec.notifyEmail || '';
+    if ($('#f-hidden')) $('#f-hidden').checked = !!rec.hidden;
     $('#formTitle').textContent = 'Edit ' + rec.refNo;
     pendingAttachments = (rec.attachments || []).slice(); renderAttachStaging();
     show('new');
@@ -176,9 +226,16 @@
       assignedTo: $('#f-assignedTo').value.trim(), notifyEmail: $('#f-notifyEmail').value.trim(),
       attachments: pendingAttachments.slice()
     };
+    var c = myCaps();
     var id = $('#f-id').value;
-    if (id) { S.update(id, data); S.logHistory(id, 'Edited', 'Details updated'); toast('Report updated'); }
-    else { var rec = S.add(data); toast('Submitted ' + rec.refNo + (data.notifyEmail ? ' (email queued for when live)' : '')); }
+    if (id) {
+      if (c.canHide) data.hidden = $('#f-hidden').checked;   // only hide-capable users may change this
+      S.update(id, data); S.logHistory(id, 'Edited', 'Details updated'); toast('Report updated');
+    } else {
+      data.hidden = c.canHide ? $('#f-hidden').checked : false;
+      var me = A ? A.currentUser() : null; if (me) data.raisedByEmail = me.email;
+      var rec = S.add(data); toast('Submitted ' + rec.refNo + (data.hidden ? ' 🔒 (hidden)' : '') + (data.notifyEmail ? ' (email queued for when live)' : ''));
+    }
     refreshDynamicFilters(); resetForm(); show('cases');
   });
   $('#formReset').addEventListener('click', resetForm);
@@ -200,16 +257,17 @@
     });
   }
   function renderCases() {
-    var rows = applyFilters(S.all(), currentFilters());
+    var pool = visible();
+    var rows = applyFilters(pool, currentFilters());
     var tbody = $('#casesTable tbody');
-    $('#casesCount').textContent = rows.length + ' of ' + S.all().length + ' reports';
+    $('#casesCount').textContent = rows.length + ' of ' + pool.length + ' reports';
     if (!rows.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">No reports match. Try “Load demo data” under Settings, or Raise a Report.</td></tr>'; updateBulkBar(); return; }
     tbody.innerHTML = rows.map(function (r) {
       return '<tr data-id="' + r.id + '">' +
         '<td><input type="checkbox" class="row-check" aria-label="Select ' + esc(r.refNo) + '" /></td>' +
         '<td><strong>' + esc(r.refNo) + '</strong></td>' +
         '<td><span class="badge type">' + esc(r.type) + '</span></td>' +
-        '<td class="wrap">' + esc(r.title) + (r.attachments && r.attachments.length ? ' 📎' : '') + (r.actions && r.actions.length ? ' <span class="mini">✔' + r.actions.length + '</span>' : '') + '</td>' +
+        '<td class="wrap">' + (r.hidden ? '🔒 ' : '') + esc(r.title) + (r.attachments && r.attachments.length ? ' 📎' : '') + (r.actions && r.actions.length ? ' <span class="mini">✔' + r.actions.length + '</span>' : '') + '</td>' +
         '<td>' + esc(r.customer || '—') + '</td>' +
         '<td>' + esc(r.location) + '</td>' +
         '<td>' + esc(r.dateReported) + '</td>' +
@@ -260,7 +318,7 @@
     if (!confirm('Delete ' + ids.length + ' report(s)?')) return;
     ids.forEach(function (id) { S.remove(id); }); renderCases(); refreshDynamicFilters(); toast('Deleted ' + ids.length);
   });
-  $('#bulk-csv').addEventListener('click', function () { var ids = checkedIds(); exportCSV(S.all().filter(function (r) { return ids.indexOf(r.id) > -1; })); });
+  $('#bulk-csv').addEventListener('click', function () { var ids = checkedIds(); exportCSV(visible().filter(function (r) { return ids.indexOf(r.id) > -1; })); });
   function bulkStatus(status) {
     var ids = checkedIds(); if (!ids.length) return;
     ids.forEach(function (id) { S.update(id, { status: status }); S.logHistory(id, 'Status → ' + status, 'bulk'); });
@@ -334,6 +392,7 @@
 
   function openDetail(id) {
     var r = S.get(id); if (!r) return;
+    if (A && !A.canSee(r)) { toast('You don’t have access to that report'); return; }
     var body = '<h2>' + esc(r.refNo) + ' <span class="badge type">' + esc(r.type) + '</span> <span class="badge ' + statusClass(r.status) + '">' + esc(r.status) + '</span>' + overdueBadge(r) + '</h2>' +
       '<p class="muted">' + esc(r.title) + '</p><div class="detail-grid">' +
       field('Risk', riskLabel(r) + (r.likelihood ? ' (L' + r.likelihood + '×C' + r.consequence + ')' : '')) +
@@ -437,13 +496,14 @@
   function renderActions() {
     var statusF = $('#act-status') ? $('#act-status').value : '';
     var onlyOverdue = $('#act-overdue') ? $('#act-overdue').checked : false;
-    var list = S.allActions().filter(function (a) {
+    var scoped = visibleActions();
+    var list = scoped.filter(function (a) {
       if (statusF && a.status !== statusF) return false;
       if (onlyOverdue && !S.actionOverdue(a)) return false;
       return true;
     });
-    var open = S.allActions().filter(function (a) { return a.status !== 'Done'; }).length;
-    var od = S.allActions().filter(function (a) { return S.actionOverdue(a); }).length;
+    var open = scoped.filter(function (a) { return a.status !== 'Done'; }).length;
+    var od = scoped.filter(function (a) { return S.actionOverdue(a); }).length;
     $('#actionsMeta').innerHTML = list.length + ' action(s) · <strong>' + open + '</strong> open · <strong class="overdue-text">' + od + '</strong> overdue';
     var tbody = $('#actionsTable tbody');
     tbody.innerHTML = list.length ? list.map(function (a) {
@@ -460,8 +520,9 @@
 
   /* ----------------------------- Risk matrix ------------------------------ */
   function renderMatrix() {
-    var open = S.all().filter(function (r) { return r.status !== 'Closed' && r.likelihood && r.consequence; });
-    var untriaged = S.all().filter(function (r) { return r.status !== 'Closed' && r.riskScore == null; }).length;
+    var pool = visible();
+    var open = pool.filter(function (r) { return r.status !== 'Closed' && r.likelihood && r.consequence; });
+    var untriaged = pool.filter(function (r) { return r.status !== 'Closed' && r.riskScore == null; }).length;
     var grid = $('#riskMatrix'), html = '<div class="axis corner"></div>';
     for (var l = 1; l <= 5; l++) html += '<div class="axis">L' + l + '</div>';
     for (var c = 5; c >= 1; c--) {
@@ -478,7 +539,7 @@
   $('#riskMatrix').addEventListener('click', function (e) {
     var cell = e.target.closest('.cell'); if (!cell) return;
     var l = cell.dataset.l, c = cell.dataset.c;
-    var matches = S.all().filter(function (r) { return r.status !== 'Closed' && String(r.likelihood) === l && String(r.consequence) === c; });
+    var matches = visible().filter(function (r) { return r.status !== 'Closed' && String(r.likelihood) === l && String(r.consequence) === c; });
     if (!matches.length) { toast('No open reports in that cell'); return; }
     $('#modalBody').innerHTML = '<h2>Open reports — L' + l + ' × C' + c + '</h2><ul class="ref-list">' +
       matches.map(function (r) { return '<li><button type="button" class="btn link" data-open="' + r.id + '"><strong>' + esc(r.refNo) + '</strong></button> ' + esc(r.title) + '</li>'; }).join('') + '</ul>';
@@ -488,7 +549,7 @@
   /* ---------------------------- Report builder ---------------------------- */
   function reportFilteredList() {
     var from = $('#rep-from').value, to = $('#rep-to').value, type = $('#rep-type').value, status = $('#rep-status').value, loc = $('#rep-location').value;
-    return S.all().filter(function (r) {
+    return visible().filter(function (r) {
       if (from && r.dateReported < from) return false; if (to && r.dateReported > to) return false;
       if (type && r.type !== type) return false; if (status && r.status !== status) return false;
       if (loc && r.location !== loc) return false; return true;
@@ -596,7 +657,19 @@
     initSelects(); applyBranding(); resetForm();
     if (!S.all().length) { S.seedDemo(42); initSelects(); }
     registerSW();
-    if (!handleDeepLink()) show('dashboard');
+    if (A) {
+      A.init({
+        onGateChange: applyAccess,
+        onAuthed: function () {
+          applyAccess();
+          refreshDynamicFilters();
+          if (!handleDeepLink()) show(defaultView());
+          if (window.HSEQI18n) window.HSEQI18n.apply();
+        }
+      });
+    } else {
+      if (!handleDeepLink()) show('dashboard');   // fallback if auth module absent
+    }
   }
   boot();
 })();
