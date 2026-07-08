@@ -12,9 +12,11 @@ site you can open by double-clicking `index.html`. All data lives in your browse
 
 ## 🔐 Access control (logins & roles)
 
-The app is locked behind a login. The **owner** account (`tnix@bws.dk`, full access) is
+The app is locked behind a login. The **owner** account (login `BWS`, full access) is
 pre-created on first run with the password **`Bluewater.1`** — sign in and change it under
 **Settings → Users & access → Reset password**. The owner adds/manages everyone else there.
+(Static build: accounts + data live in each browser, so this is per-device — the shared,
+cross-device multi-user server lives on the `multiuser-backend` branch for Railway.)
 Passwords are hashed (SHA‑256 + per‑user salt) in `localStorage`; the session lives in
 `sessionStorage` (clears when the tab closes).
 

@@ -697,9 +697,15 @@
 
   /* ------------------------------- PWA ------------------------------------ */
   function registerSW() {
-    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
-      navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('SW registration failed', e); });
-    }
+    // No offline service worker — a cache-first SW served stale logins/assets.
+    // Unregister any previously-installed worker and wipe its caches so the app
+    // (and updates like a changed login) always load fresh.
+    try {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) { regs.forEach(function (r) { r.unregister(); }); });
+      }
+      if (window.caches && caches.keys) { caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); }); }
+    } catch (e) {}
   }
 
   /* shared helpers for other modules */

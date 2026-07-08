@@ -22,7 +22,7 @@
 
   var USERS_KEY = 'openhseq.users.v1';
   var SESSION_KEY = 'openhseq.session';          // sessionStorage — clears on tab close
-  var OWNER_EMAIL = 'tnix@bws.dk';
+  var OWNER_EMAIL = 'BWS';             // owner login id (a username, matched case-insensitively)
 
   /* ------------------------------- storage -------------------------------- */
   function readUsers() {
@@ -219,7 +219,7 @@
         '<div class="auth-sub">Sign in to continue</div></div></div>' +
         (msg ? '<p class="auth-note">' + esc(msg) + '</p>' : '') +
         '<form id="auth-login-form" class="auth-form">' +
-          '<label>Email<input type="email" id="login-email" autocomplete="username" required /></label>' +
+          '<label>Login<input type="text" id="login-email" autocomplete="username" placeholder="e.g. BWS" required /></label>' +
           '<label>Password<input type="password" id="login-pass" autocomplete="current-password" required /></label>' +
           '<div class="auth-err" id="login-err" hidden></div>' +
           '<button type="submit" class="btn primary auth-btn">Sign in</button>' +
@@ -309,7 +309,7 @@
         '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
         '<h3 style="margin-top:18px">Add a user</h3>' +
         '<div class="form-grid">' +
-          '<label>Email<input type="email" id="nu-email" placeholder="name@bws.dk" /></label>' +
+          '<label>Login<input type="text" id="nu-email" placeholder="e.g. BWS or name@bws.dk" /></label>' +
           '<label>Display name<input type="text" id="nu-name" placeholder="Optional" /></label>' +
           '<label>Linked person<input type="text" id="nu-person" list="people" placeholder="Who in People this is (for report assignment)" /></label>' +
           '<label>Access level<select id="nu-level">' + levelOptions(1, maxAssignable) + '</select></label>' +
