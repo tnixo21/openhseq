@@ -12,3 +12,6 @@ hseq-report.csv
 # Logs / temp
 *.log
 node_modules/
+
+# Server data (backend branch only; never on the static site)
+data/
