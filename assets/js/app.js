@@ -12,23 +12,33 @@
   function visible() { return A ? A.scope(S.all()) : S.all(); }
   function visibleActions() { var ids = {}; visible().forEach(function (r) { ids[r.id] = 1; }); return S.allActions().filter(function (a) { return ids[a.reportId]; }); }
   function myCaps() { return A ? A.myCaps() : { raiseReports: true, audits: true, viewReports: true, dashboards: true, canHide: false, manageUsers: false, reportsScope: 'all' }; }
+  function myLevel() { return A && A.currentUser() ? A.currentUser().level : 6; }
+  // canView = may the user REACH this view (show() guard). Level 1 can reach 'audits'
+  // only to run an audit started from a site hub — it's just hidden from their nav.
   function canView(view) {
     var c = myCaps();
     switch (view) {
       case 'dashboard': case 'reports': case 'risk': return c.dashboards;
       case 'cases': case 'actions': return c.viewReports;
-      case 'audits': return c.audits;
-      case 'documents': return true;
+      case 'audits': return true;
+      case 'documents': return c.documents;
       case 'new': return c.raiseReports;
       case 'qr': return c.qrCodes;
+      case 'sites': return true;
       case 'settings': return c.settings;
       case 'hub': return true;
       default: return true;
     }
   }
+  // navVisible = should this appear as a sidebar tab (stricter than canView).
+  function navVisible(view) {
+    if (!canView(view)) return false;
+    if (view === 'audits') return myLevel() >= 2;   // no Audits tab for level 1
+    return true;
+  }
   function defaultView() {
-    var order = ['dashboard', 'cases', 'audits', 'new'];
-    for (var i = 0; i < order.length; i++) if (canView(order[i])) return order[i];
+    var order = ['dashboard', 'cases', 'audits', 'sites', 'new'];
+    for (var i = 0; i < order.length; i++) if (navVisible(order[i])) return order[i];
     return 'new';
   }
 
@@ -70,6 +80,7 @@
     if (view === 'audits' && window.HSEQAudits) window.HSEQAudits.render();
     if (view === 'documents' && window.HSEQDocs) window.HSEQDocs.render();
     if (view === 'qr') renderQRView();
+    if (view === 'sites') renderSitesView();
     if (view === 'settings' && window.HSEQSettings) window.HSEQSettings.render();
     if (view === 'new' && !$('#f-id').value) resetForm();
     if (window.HSEQI18n) window.HSEQI18n.apply();
@@ -88,7 +99,7 @@
     }
     var c = myCaps();
     // show/hide nav items per capability
-    $all('.nav-btn').forEach(function (b) { b.hidden = !canView(b.dataset.view); });
+    $all('.nav-btn').forEach(function (b) { b.hidden = !navVisible(b.dataset.view); });
     // hide-report option only for level 5+
     var hr = $('#hideReportRow'); if (hr) hr.hidden = !c.canHide;
     if (!c.canHide) { var hc = $('#f-hidden'); if (hc) hc.checked = false; }
@@ -611,6 +622,25 @@
     var url = c.dataset.url;
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast('Link copied'); }, function () { prompt('Copy this link:', url); });
     else prompt('Copy this link:', url);
+  });
+
+  /* ------------------------------- Sites tab ------------------------------ */
+  /* A list of locations; opening one shows that site's hub (raise report +
+     audits to complete). This is the level-1 landing — same target the QR
+     Preview buttons point to. */
+  function renderSitesView() {
+    var cards = S.locations().map(function (loc) {
+      return '<button type="button" class="site-card" data-site="' + esc(loc) + '">' +
+        '<span class="site-ico">📍</span><span class="site-name">' + esc(loc) + '</span>' +
+        '<span class="site-go">Open →</span></button>';
+    }).join('');
+    $('#sitesRoot').innerHTML = '<div class="card"><h3>Choose a site</h3>' +
+      '<p class="muted">Open a location to raise a report or complete the audits that need doing there.</p>' +
+      '<div class="site-grid">' + (cards || '<p class="muted">No locations configured.</p>') + '</div></div>';
+  }
+  $('#sitesRoot').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-site]'); if (!b) return;
+    renderHub(b.dataset.site); show('hub');
   });
 
   /* ------------------------------- Quick Hub ------------------------------ */

@@ -14,7 +14,7 @@
     en: {
       'nav.dashboard': 'Dashboard', 'nav.new': 'Raise Report', 'nav.cases': 'Cases',
       'nav.actions': 'Actions', 'nav.risk': 'Risk Matrix', 'nav.audits': 'Audits',
-      'nav.documents': 'Documents', 'nav.qr': 'QR Codes', 'nav.reports': 'Reports', 'nav.settings': 'Settings',
+      'nav.sites': 'Sites', 'nav.documents': 'Documents', 'nav.qr': 'QR Codes', 'nav.reports': 'Reports', 'nav.settings': 'Settings',
       'app.tagline': 'Reports & Analytics', 'safety.days': 'days since last recordable incident',
       'dash.title': 'Dashboard', 'dash.sub': 'Live overview of all HSEQ reports.',
       'new.title': 'Raise a Report', 'cases.title': 'Cases', 'actions.title': 'Action Register',
@@ -26,7 +26,7 @@
     es: {
       'nav.dashboard': 'Panel', 'nav.new': 'Crear informe', 'nav.cases': 'Casos',
       'nav.actions': 'Acciones', 'nav.risk': 'Matriz de riesgo', 'nav.audits': 'Auditorías',
-      'nav.documents': 'Documentos', 'nav.qr': 'Códigos QR', 'nav.reports': 'Informes', 'nav.settings': 'Ajustes',
+      'nav.sites': 'Sitios', 'nav.documents': 'Documentos', 'nav.qr': 'Códigos QR', 'nav.reports': 'Informes', 'nav.settings': 'Ajustes',
       'app.tagline': 'Informes y análisis', 'safety.days': 'días desde el último incidente registrable',
       'dash.title': 'Panel', 'dash.sub': 'Resumen en vivo de todos los informes HSEQ.',
       'new.title': 'Crear un informe', 'cases.title': 'Casos', 'actions.title': 'Registro de acciones',
@@ -38,7 +38,7 @@
     zh: {
       'nav.dashboard': '仪表板', 'nav.new': '上报', 'nav.cases': '案例',
       'nav.actions': '行动', 'nav.risk': '风险矩阵', 'nav.audits': '审核',
-      'nav.documents': '文档', 'nav.qr': '二维码', 'nav.reports': '报告', 'nav.settings': '设置',
+      'nav.sites': '站点', 'nav.documents': '文档', 'nav.qr': '二维码', 'nav.reports': '报告', 'nav.settings': '设置',
       'app.tagline': '报告与分析', 'safety.days': '距上次可记录事故的天数',
       'dash.title': '仪表板', 'dash.sub': '所有 HSEQ 报告的实时概览。',
       'new.title': '上报记录', 'cases.title': '案例', 'actions.title': '行动登记',

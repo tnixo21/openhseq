@@ -28,6 +28,7 @@
       </div>
       <nav class="nav" id="nav">
         <button type="button" class="nav-btn active" data-view="dashboard"><span>📊</span> <span data-i18n="nav.dashboard">Dashboard</span></button>
+        <button type="button" class="nav-btn" data-view="sites"><span>📍</span> <span data-i18n="nav.sites">Sites</span></button>
         <button type="button" class="nav-btn" data-view="new"><span>➕</span> <span data-i18n="nav.new">Raise Report</span></button>
         <button type="button" class="nav-btn" data-view="cases"><span>🗂️</span> <span data-i18n="nav.cases">Cases</span></button>
         <button type="button" class="nav-btn" data-view="actions"><span>✔️</span> <span data-i18n="nav.actions">Actions</span></button>
@@ -200,6 +201,12 @@
       <section class="view" id="view-documents">
         <header class="view-head"><h1 data-i18n="docs.title">Document Centre</h1><p class="muted">SOPs, SDS and policies — optionally linked to a report type so they show on matching cases.</p></header>
         <div id="docsRoot"></div>
+      </section>
+
+      <!-- ---------- Sites (location list → hub) ---------- -->
+      <section class="view" id="view-sites">
+        <header class="view-head"><h1>Sites</h1><p class="muted">Pick a location to raise a report or run the audits that need doing there.</p></header>
+        <div id="sitesRoot"></div>
       </section>
 
       <!-- ---------- QR Codes ---------- -->

@@ -386,7 +386,20 @@ body.locked { overflow: hidden; }
 .user-level { color: #94a3b8; font-size: .7rem; }
 .user-logout { flex: none; }
 
+/* -------------------------------- Sites tab ------------------------------ */
+.site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.site-card {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 16px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text); font: inherit; cursor: pointer; box-shadow: var(--shadow);
+}
+.site-card:hover { border-color: var(--primary); background: var(--surface-2); }
+.site-ico { font-size: 1.3rem; }
+.site-name { font-weight: 600; flex: 1; }
+.site-go { color: var(--primary); font-size: .8rem; font-weight: 600; }
+
 /* ---------------------------- User management ---------------------------- */
+.u-person input, input.u-person { min-width: 120px; }
 .form label[hidden] { display: none; }   /* e.g. hide-report-row when user can't hide */
 .hide-report-row .inline { font-weight: 600; }
 #usersTable td { vertical-align: middle; }

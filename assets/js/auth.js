@@ -81,18 +81,29 @@
   /* --------------------------- user CRUD (owner) -------------------------- */
   function findByEmail(email) { var e = norm(email); return readUsers().filter(function (u) { return norm(u.email) === e; })[0] || null; }
 
+  // Every account is linked to a People entry so report assignment can route to it.
+  // Guarantee the linked name exists in the People list (add it if new).
+  function ensurePerson(name) {
+    name = String(name || '').trim(); if (!name) return;
+    var S = global.HSEQStore; if (!S || !S.people || !S.saveSettings) return;
+    var people = S.people().slice();
+    if (people.map(norm).indexOf(norm(name)) === -1) { people.push(name); S.saveSettings({ people: people }); }
+  }
+
   function createUser(opts) {
-    // opts: { email, name, level, password }  -> Promise<user>
+    // opts: { email, name, level, password, person }  -> Promise<user>
     var email = norm(opts.email);
     if (!email) return Promise.reject(new Error('Email is required.'));
     if (findByEmail(email)) return Promise.reject(new Error('A user with that email already exists.'));
     var level = Math.max(1, Math.min(6, Number(opts.level) || 1));
     if (!opts.password || opts.password.length < 6) return Promise.reject(new Error('Password must be at least 6 characters.'));
     var salt = randSalt();
+    var name = (opts.name || '').trim() || email;
+    var person = (opts.person || '').trim() || name;        // auto-link to a Person
     return hashPassword(opts.password, salt).then(function (h) {
-      var user = { id: uid(), email: email, name: (opts.name || '').trim() || email, level: level,
+      var user = { id: uid(), email: email, name: name, person: person, level: level,
         salt: salt, algo: h.algo, hash: h.hash, active: true, createdAt: new Date().toISOString() };
-      var list = readUsers(); list.push(user); writeUsers(list); return user;
+      var list = readUsers(); list.push(user); writeUsers(list); ensurePerson(person); return user;
     });
   }
 
@@ -102,6 +113,7 @@
       if (list[i].id === id) {
         if (patch.level != null) list[i].level = Math.max(1, Math.min(6, Number(patch.level)));
         if (patch.name != null) list[i].name = String(patch.name).trim() || list[i].email;
+        if (patch.person != null) { list[i].person = String(patch.person).trim() || list[i].name; ensurePerson(list[i].person); }
         if (patch.active != null) list[i].active = !!patch.active;
         writeUsers(list); return list[i];
       }
@@ -151,7 +163,7 @@
   /* On a fresh install (no users yet) seed the owner with a known password so the
      hosted app is usable immediately — no first-run race over who claims owner. */
   var DEFAULT_OWNER_PW = 'Bluewater.1';
-  function seedOwner() { return createUser({ email: OWNER_EMAIL, name: 'Owner', level: 6, password: DEFAULT_OWNER_PW }); }
+  function seedOwner() { return createUser({ email: OWNER_EMAIL, name: 'Owner', person: 'T. Nixon', level: 6, password: DEFAULT_OWNER_PW }); }
 
   /* --------------------------- capability model --------------------------- */
   function caps(level) {
@@ -161,6 +173,7 @@
       audits: true,                                         // L1 raises, L2+ view — all get the tab
       reportsScope: level >= 6 ? 'all' : level >= 5 ? 'nonhidden' : level >= 3 ? 'assigned' : 'none',
       viewReports: level >= 3,
+      documents: level >= 2,                                // Document Centre tab (not level 1)
       dashboards: level >= 4,
       createAudits: level >= 4,                             // build/edit/delete audit types
       qrCodes: level >= 4,                                  // Quick-access QR codes tab
@@ -173,7 +186,8 @@
   function myCaps() { var u = currentUser(); return caps(u ? u.level : 0); }
 
   function isMine(rec, user) {
-    var keys = [norm(user.name), norm(user.email), norm((user.email || '').split('@')[0])];
+    // Primary link is the account's People entry (user.person); email/name are fallbacks.
+    var keys = [norm(user.person), norm(user.name), norm(user.email), norm((user.email || '').split('@')[0])].filter(Boolean);
     return keys.indexOf(norm(rec.assignedTo)) > -1 || keys.indexOf(norm(rec.reporter)) > -1 ||
       (rec.raisedByEmail && norm(rec.raisedByEmail) === norm(user.email));
   }
@@ -271,8 +285,12 @@
         : '<span class="badge ' + (u.active ? 'status-Closed' : 'status-Open') + '">' + (u.active ? 'Active' : 'Inactive') + '</span>';
       var resetBtn = (owner ? admin.grantOwner : manageable) ? '<button type="button" class="btn small u-pass">Reset password</button>' : '';
       var delBtn = manageable ? ' <button type="button" class="btn small danger u-del">Delete</button>' : '';
+      var personCell = manageable
+        ? '<input type="text" class="u-person" list="people" value="' + esc(u.person || '') + '" placeholder="—" aria-label="Linked person" />'
+        : '<span>' + esc(u.person || '—') + '</span>';
       return '<tr data-uid="' + u.id + '">' +
         '<td><strong>' + esc(u.email) + '</strong>' + (owner ? ' <span class="badge type">owner</span>' : '') + '<div class="muted">' + esc(u.name) + '</div></td>' +
+        '<td>' + personCell + '</td>' +
         '<td>' + levelCell + '</td>' +
         '<td>' + statusCell + '</td>' +
         '<td class="u-actions">' + (resetBtn || delBtn ? resetBtn + delBtn : '<span class="muted">—</span>') + '</td>' +
@@ -287,12 +305,13 @@
       '<div class="card"><h3>Users &amp; access</h3>' +
         '<p class="muted">' + note + ' Changes apply the next time that user loads a screen.</p>' +
         '<div class="table-wrap"><table class="data-table" id="usersTable"><thead><tr>' +
-          '<th>User</th><th>Access level</th><th>Status</th><th>Actions</th>' +
+          '<th>User</th><th>Linked person</th><th>Access level</th><th>Status</th><th>Actions</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
         '<h3 style="margin-top:18px">Add a user</h3>' +
         '<div class="form-grid">' +
           '<label>Email<input type="email" id="nu-email" placeholder="name@bws.dk" /></label>' +
           '<label>Display name<input type="text" id="nu-name" placeholder="Optional" /></label>' +
+          '<label>Linked person<input type="text" id="nu-person" list="people" placeholder="Who in People this is (for report assignment)" /></label>' +
           '<label>Access level<select id="nu-level">' + levelOptions(1, maxAssignable) + '</select></label>' +
           '<label>Temporary password<input type="password" id="nu-pass" placeholder="At least 6 characters" autocomplete="new-password" /></label>' +
         '</div>' +
@@ -311,6 +330,7 @@
         updateUser(id, { level: lvl }); toast('Level updated');
       }
       if (e.target.classList.contains('u-active')) { updateUser(id, { active: e.target.checked }); toast(e.target.checked ? 'Activated' : 'Deactivated'); }
+      if (e.target.classList.contains('u-person')) { updateUser(id, { person: e.target.value }); toast('Linked person updated'); }
     });
     table.addEventListener('click', function (e) {
       var tr = e.target.closest('tr[data-uid]'); if (!tr) return; var id = tr.dataset.uid;
@@ -332,7 +352,7 @@
       var lvl = Number(container.querySelector('#nu-level').value);
       if (lvl >= 6 && !admin.grantOwner) { err.textContent = 'Only the owner can grant level-6 access.'; err.hidden = false; return; }
       createUser({ email: container.querySelector('#nu-email').value, name: container.querySelector('#nu-name').value,
-        level: lvl, password: container.querySelector('#nu-pass').value })
+        person: container.querySelector('#nu-person').value, level: lvl, password: container.querySelector('#nu-pass').value })
         .then(function () { renderUsers(container); toast('User added'); })
         .catch(function (ex) { err.textContent = ex.message; err.hidden = false; });
     });
