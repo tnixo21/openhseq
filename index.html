@@ -258,5 +258,11 @@
   <script src="assets/js/settings.js"></script>
   <script src="assets/js/docs.js"></script>
   <script src="assets/js/audits.js"></script>
+  <!-- Anonymous open counter (no names/IPs) — fails silently offline -->
+  <script>
+  (function(){try{
+  fetch('https://delivery-booking-production.up.railway.app/api/track?tool=openhseq',{method:'POST',mode:'cors',keepalive:true,cache:'no-store'}).catch(function(){});
+  }catch(e){}})();
+  </script>
 </body>
 </html>
